@@ -1,527 +1,394 @@
 <!DOCTYPE html>
-
 <html lang="de">
     <head>
-
         <meta charset="UTF-8">
-
-        <!-- Layout an die Gerätebreite anpassen. Dein Handy ist kein verdammter 32-Zoll-Monitor. -->
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-        <meta name="theme-color" content="#111b29">
-        <title>Lenze Motion Lab · HamelnHack 2026</title>
-
+        <meta name="theme-color" content="#171c22">
+        <title>Lenze / Motion Interface</title>
         <link rel="stylesheet" href="css.css">
-
-        <!-- Skript erst nach dem HTML laden. Erst die Bühne, dann dein Fehlerfestival. -->
         <script src="webSpeechAPI.js" defer></script>
     </head>
     <body>
-
-        <!-- Radio-Inputs steuern die Tabs per CSS. Ja, du JavaScript-Junkie, das geht auch ohne Skript. -->
-        <input class="state-input" type="radio" name="page" id="control-tab" checked>
-        <input class="state-input" type="radio" name="page" id="setup-tab">
-        <input class="state-input" type="radio" name="page" id="settings-tab">
-
-        <!-- Schalter für die vergrößerte Ansicht. Jetzt sieht man das Chaos wenigstens größer. -->
-        <input class="state-input" type="checkbox" id="focus-mode">
-
-        <!-- Logo und Navigation. -->
-        <header class="topbar">
-
-            <a class="brand" href="main.html" aria-label="Lenze Motion Lab Startseite">
-                <span class="brand-symbol">
-                    L
-                    <span>↗</span>
-                </span>
+        <header class="app-header">
+            <a class="brand" href="main.html">
+                <span class="brand-mark">L/</span>
                 <span>
                     lenze
-                    <span class="brand-sub">MOTION LAB</span>
+                    <small>MOTION INTERFACE</small>
                 </span>
             </a>
-
-            <!-- for verbindet die Tab-Labels mit den Radio-Inputs. -->
-            <nav aria-label="Hauptnavigation">
-                <label for="control-tab">Steuerung</label>
-                <label for="setup-tab">Setup</label>
-                <label for="settings-tab">Einstellungen</label>
-            </nav>
-            <span class="event">
+            <span class="event-label">
                 HAMELNHACK
                 <b>2026</b>
             </span>
+            <span class="connection-badge" id="headerConnection">Lokal · nicht verbunden</span>
         </header>
-
-        <main>
-
-            <!-- Steuerungs-Prototyp. -->
-            <section class="page control-page" aria-labelledby="control-heading">
-
-                <div class="page-heading">
-                    <div>
-                        <p class="eyebrow">MENSCH. SPRACHE. BEWEGUNG.</p>
-                        <h1 id="control-heading">Deine Idee bewegt.</h1>
-                        <p>Sprich mit dem Roboter. Oder nimm die Steuerung selbst in die Hand.</p>
-                    </div>
-                    <span class="demo-tag">
-                        <span></span>
-                        Prototyp · Simulationsansicht
+        <div class="app-layout">
+            <nav class="navigation" aria-label="Hauptnavigation">
+                <span class="nav-label">KONSOLE</span>
+                <button class="nav-button active" data-page="control" aria-current="page">
+                    <span>⌖</span>
+                    Steuerung
+                </button>
+                <button class="nav-button" data-page="setup">
+                    <span>⌁</span>
+                    Setup
+                </button>
+                <button class="nav-button" data-page="settings">
+                    <span>☷</span>
+                    Einstellungen
+                </button>
+                <div class="nav-bottom">
+                    <span class="vertical-line"></span>
+                    <span>
+                        SPRACHE
+                        <br>
+                        WIRD BEWEGUNG.
                     </span>
+                    <small>PROTOTYP / V0.2</small>
                 </div>
-
-                <!-- Am PC nebeneinander, am Handy untereinander. Sogar die Karten kriegen ihre Aufstellung hin. -->
-                <div class="workspace">
-
-                    <section class="robot-panel" aria-labelledby="workspace-heading">
-
-                        <div class="panel-top">
-                            <div>
-                                <span class="live-dot"></span>
-                                <h2 id="workspace-heading">Arbeitsraum</h2>
-                                <span class="small-label">3D-VORSCHAU</span>
-                            </div>
-
-                            <!-- Schaltet die vergrößerte Ansicht um. -->
-                            <label class="icon-button focus-button" for="focus-mode">
-                                <span class="expand-icon">⛶</span>
-                                <span class="focus-open">Ansicht vergrößern</span>
-                                <span class="focus-close">Ansicht schließen</span>
-                            </label>
+            </nav>
+            <main>
+                <section id="page-control" class="page" aria-labelledby="control-heading">
+                    <div class="page-heading">
+                        <div>
+                            <p class="eyebrow">OPERATOR WORKSPACE</p>
+                            <h1 id="control-heading">
+                                Steuerzentrale
+                                <span>.</span>
+                            </h1>
                         </div>
+                        <p class="page-description">
+                            Direkte Eingabe. Klare Rückmeldung.
+                            <br>
+                            Ein Arbeitsraum für Sprache und Bewegung.
+                        </p>
+                    </div>
+                    <div class="workspace">
 
-                        <!-- Nur Vorschau: Der Greifer-Mauszeiger kommt aus CSS. -->
-                        <div class="robot-stage" tabindex="0" aria-label="Illustrativer Roboterarbeitsraum. Am Computer erscheint ein Greifer als Mauszeiger. Keine echte Robotersteuerung.">
-                            <div class="stage-meta">
-                                <span class="stage-label">MANUELLER MODUS</span>
-                                <span class="stage-note">Greifer mit der Maus positionieren</span>
+                        <!-- Die Vorschau verändert nur die Zielposition; gesendet wird ausdrücklich per Button. -->
+                        <section class="robot-panel" aria-labelledby="robot-heading">
+                            <div class="panel-header">
+                                <h2 id="robot-heading">
+                                    Arbeitsraum
+                                    <span class="tag">XY / VORSCHAU</span>
+                                </h2>
+                                <button id="focusButton" class="text-button" aria-pressed="false">Ansicht vergrößern ⛶</button>
                             </div>
+                            <div class="robot-stage" id="robotStage" tabindex="0" role="group" aria-label="Zielposition mit Maus oder Pfeiltasten wählen, durch Klick oder Enter fixieren">
+                                <div class="stage-top">
+                                    <span class="stage-label" id="targetMode">ZIEL WÄHLEN</span>
+                                    <span id="stageHint">Maus bewegen · Klick oder Tippen fixiert</span>
+                                </div>
+                                <svg id="robotDrawing" viewBox="0 0 800 500" role="img" aria-labelledby="robot-title">
+                                    <title id="robot-title">Interaktive schematische Roboterarm-Vorschau</title>
+                                    <defs>
+                                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                            <path d="M40 0H0V40" fill="none" stroke="currentColor" stroke-width="0.7"/>
+                                        </pattern>
+                                    </defs>
+                                    <rect class="grid-layer" width="800" height="500" fill="url(#grid)"/>
+                                    <circle class="reach-ring" cx="170" cy="420" r="300"/>
+                                    <circle class="reach-ring" cx="170" cy="420" r="440"/>
+                                    <path class="base-line" d="M75 448H265M170 420V450"/>
 
-                            <div class="stage-grid"></div>
-
-                            <!-- Statische SVG-Zeichnung. Der Arm bewegt sich so viel wie dein Code ohne Debugging. -->
-                            <svg class="robot-illustration" viewBox="0 0 800 560" role="img" aria-labelledby="robot-title">
-                                <title id="robot-title">Virtueller Roboterarm mit transparenter Vorschau des echten Arms</title>
-
-                                <!-- Farbverläufe und Schatten für die Zeichnung. -->
-                                <defs>
-
-                                    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
-                                        <stop stop-color="#fafcff"/>
-                                        <stop offset=".48" stop-color="#c6d2df"/>
-                                        <stop offset="1" stop-color="#71849b"/>
-                                    </linearGradient>
-
-                                    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
-                                        <stop stop-color="#53afff"/>
-                                        <stop offset="1" stop-color="#0061b7"/>
-                                    </linearGradient>
-
-                                    <filter id="shadow">
-                                        <feGaussianBlur stdDeviation="14"/>
-                                    </filter>
-                                </defs>
-
-                                <ellipse cx="379" cy="463" rx="170" ry="23" fill="#020912" opacity=".7" filter="url(#shadow)"/>
-
-                                <!-- Transparente Ist-Arm-Vorschau ohne Live-Daten. Der Geist deines funktionierenden Roboters. -->
-                                <g class="ghost-arm" fill="none" stroke="#9bc4e6" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M366 431V342L268 245L376 153L472 195"/>
-                                    <circle cx="268" cy="245" r="22"/>
-                                    <circle cx="376" cy="153" r="17"/>
-                                    <path d="M472 195l23 8m-5-14 20 11-8 20" stroke-width="9"/>
-                                </g>
-
-                                <!-- Virtueller Arm mit Gelenken und Greifer. -->
-                                <g stroke="#263d54" stroke-width="2">
-                                    <path d="M291 435l67-25 88 25-64 30z" fill="#6d7f93"/>
-                                    <path d="M291 435v17l91 31v-18z" fill="#364a60"/>
-                                    <path d="M382 465l64-30v17l-64 31z" fill="#26394c"/>
-                                    <path d="M330 433v-55h72v55q-36 21-72 0" fill="url(#metal)"/>
-                                    <ellipse cx="366" cy="378" rx="36" ry="14" fill="url(#blue)"/>
-                                    <path d="M342 378l-55-120 39-20 62 132z" fill="url(#metal)"/>
-                                    <path d="M351 369l-50-111 9-4 53 111z" fill="#f7fafc" opacity=".7"/>
-                                    <circle cx="307" cy="247" r="34" fill="url(#blue)"/>
-                                    <circle cx="307" cy="247" r="20" fill="#153b61"/>
-                                    <circle cx="307" cy="247" r="11" fill="#8bb7de"/>
-                                    <path d="M309 214l124-74 22 34-128 96 10-28z" fill="url(#metal)"/>
-                                    <path d="M335 225l98-58" fill="none" stroke="#eef5fc" stroke-width="10"/>
-                                    <circle cx="443" cy="156" r="27" fill="url(#blue)"/>
-                                    <circle cx="443" cy="156" r="13" fill="#163f67"/>
-                                    <path d="M464 149l61 34-13 28-63-32z" fill="url(#metal)"/>
-                                    <path d="M514 179l19 10-15 30-18-9z" fill="url(#blue)"/>
-                                    <path d="M530 196l17 9" stroke="#d7e3ed" stroke-width="13"/>
-                                    <path d="M547 198l20 11-10 20m-16-19 8 16-11 10" fill="none" stroke="#b8f36c" stroke-width="8" stroke-linejoin="round"/>
-                                </g>
-
-                                <g stroke="#b8f36c" fill="none" opacity=".8">
-                                    <circle cx="551" cy="215" r="43" stroke-dasharray="3 8"/>
-                                    <path d="M551 161v13m0 82v13m-54-54h13m82 0h13"/>
-                                </g>
-                                <path d="M583 196l45-32h70" stroke="#71889f" fill="none"/>
-                                <text x="632" y="153" fill="#b8f36c" font-size="13" font-family="sans-serif">ZIELPOSITION</text>
-                            </svg>
-
-                            <div class="axis" aria-label="Koordinatenachsen">
-                                <span class="axis-z">Z</span>
-                                <span class="axis-y">Y</span>
-                                <span class="axis-x">X</span>
-                                <i></i>
-                            </div>
-
-                            <div class="stage-legend">
-                                <span>
-                                    <i class="legend-target"></i>
-                                    Virtueller Arm
-                                </span>
-                                <span>
-                                    <i class="legend-actual"></i>
-                                    Echter Arm · Vorschau
-                                </span>
-                            </div>
-
-                            <div class="touch-hint">Am Handy: Vorschau des Arbeitsraums</div>
-                        </div>
-
-                        <!-- Feste Beispielkoordinaten. Die Zahlen sind ausgedacht, genau wie dein Optimismus beim ersten Start. -->
-                        <div class="coordinates">
-                            <div>
-                                <span class="eyebrow">
-                                    ZIELPOSITION
-                                    <small>BEISPIELWERTE</small>
-                                </span>
-                                <div class="coordinate-values">
+                                    <!-- Der transparente Arm erscheint erst bei gültiger Telemetrie. -->
+                                    <g id="actualArm" class="actual-arm" visibility="hidden">
+                                        <path id="actualPath"/>
+                                        <circle id="actualJoint" r="21"/>
+                                        <circle id="actualTip" r="12"/>
+                                    </g>
+                                    <g class="virtual-arm">
+                                        <path id="armShadow" class="arm-shadow"/>
+                                        <path id="armPath"/>
+                                        <circle class="base-joint" cx="170" cy="420" r="27"/>
+                                        <circle id="armJoint" r="24"/>
+                                        <circle id="armTip" r="14"/>
+                                    </g>
+                                    <g id="targetMarker" class="target-marker">
+                                        <circle r="31"/>
+                                        <path d="M-42 0H-22M22 0H42M0-42V-22M0 22V42"/>
+                                        <path id="gripperDrawing" d="M-10-8V9L-5 15M10-8V9L5 15"/>
+                                    </g>
+                                    <text class="axis-label" x="27" y="470">Y ↑</text>
+                                    <text class="axis-label" x="725" y="470">X →</text>
+                                </svg>
+                                <div class="stage-bottom">
                                     <span>
-                                        <b>X</b>
-                                        240
-                                        <small>mm</small>
+                                        <i class="swatch target-swatch"></i>
+                                        Zielarm
                                     </span>
                                     <span>
-                                        <b>Y</b>
-                                        125
-                                        <small>mm</small>
+                                        <i class="swatch actual-swatch"></i>
+                                        Phantom / Ist-Arm
+                                        <b id="telemetryLabel">· keine Daten</b>
                                     </span>
-                                    <span>
-                                        <b>Z</b>
-                                        180
-                                        <small>mm</small>
-                                    </span>
+                                    <span class="stage-scale">SCHEMATISCHE ANSICHT</span>
                                 </div>
                             </div>
-
-                            <div class="gripper-state">
-                                <span class="gripper-symbol">⋃</span>
-                                <span>
+                            <div class="position-strip">
+                                <div>
+                                    <span class="eyebrow">ZIELPOSITION</span>
+                                    <div class="coordinates">
+                                        <span>
+                                            X
+                                            <output id="coordX">240</output>
+                                        </span>
+                                        <span>
+                                            Y
+                                            <output id="coordY">125</output>
+                                        </span>
+                                        <span>
+                                            Z
+                                            <output id="coordZ">180</output>
+                                        </span>
+                                        <small id="unitLabel">mm</small>
+                                    </div>
+                                </div>
+                                <button id="gripperButton" class="gripper-button" aria-pressed="false">
                                     Greifer
-                                    <strong>Offen</strong>
-                                </span>
+                                    <b id="gripperState">offen</b>
+                                </button>
                             </div>
-                        </div>
-                    </section>
+                            <div class="robot-tools">
+                                <label for="heightControl">
+                                    Höhe Z
+                                    <span>mm</span>
+                                </label>
+                                <input id="heightControl" type="range" min="0" max="400" value="180">
+                                <button id="unlockTargetButton" class="secondary-button" disabled>Ziel bearbeiten</button>
+                                <button id="homeButton" class="secondary-button">Ziel zurücksetzen</button>
+                                <button id="sendTargetButton" class="primary-button" disabled>Ziel übertragen</button>
+                            </div>
+                            <p id="targetStatus" class="panel-note" role="status">Nur lokale Vorschau. Keine Roboterverbindung.</p>
+                        </section>
 
-                    <!-- Sprach-Demo; echte Aufnahme steht ganz unten. -->
-                    <aside class="command-panel" aria-labelledby="voice-heading">
-                        <div class="section-kicker">DEIN DRAHT ZUM ROBOTER</div>
-                        <h2 id="voice-heading">Sag, was passieren soll.</h2>
-                        <p>Aus deinen Worten werden klare Bewegungen.</p>
-
-                        <!-- Nur Demo-Animation, kein Mikrofon. Lauter blinken ist leider keine Spracherkennung. -->
-                        <input class="state-input" type="checkbox" id="mic-preview">
-
-                        <label class="mic-button" for="mic-preview" aria-label="Aufnahmeansicht umschalten">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-                                <rect x="9" y="3" width="6" height="12" rx="3"/>
-                                <path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v4m-4 0h8"/>
-                            </svg>
-                        </label>
-
-                        <div class="mic-status">
-                            <span class="mic-idle">Zum Sprechen antippen</span>
-                            <span class="mic-active">Aufnahmeansicht aktiv</span>
-                            <small>UI-Demo · Mikrofon nicht verbunden</small>
-                        </div>
-
-                        <div class="waveform" aria-hidden="true">
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                            <i></i>
-                        </div>
-
-                        <div class="transcript">
-                            <span class="eyebrow">SO KÖNNTE DEIN BEFEHL AUSSEHEN</span>
-                            <p>„Bewege den Greifer nach rechts und öffne ihn.“</p>
-                            <span class="example-tag">Beispieltranskript</span>
-                        </div>
-
-                        <div class="command-flow">
-                            <span>Sprache</span>
-                            <span class="flow-line"></span>
-                            <span>KI</span>
-                            <span class="flow-line"></span>
-                            <span>Roboter</span>
-                        </div>
-
-                        <!-- Beispielbefehl, wird nicht ausgeführt. Der Roboter hat deine Tippfehler noch nicht verdient. -->
-                        <div class="command-preview">
-                            <span class="eyebrow">ÜBERSETZTER BEFEHL · BEISPIEL</span>
-                            <code>
-                                <span>move_to</span>
-                                (x=240, y=125, z=180)
-                                <br>
-                                <span>gripper</span>
-                                (open)
-                            </code>
-                        </div>
-
-                        <button class="primary-button" disabled>
-                            Bewegung ausführen
-                            <span>DEMO</span>
-                        </button>
-                        <p class="panel-footnote">Die Roboterverbindung wird im Setup eingerichtet.</p>
-                    </aside>
-                </div>
-
-                <footer class="workspace-footer">
-                    <span>
-                        <span class="connection-dot"></span>
-                        Kein Roboter verbunden
-                    </span>
-                    <span>
-                        Ideen in Bewegung.
-                        <b>Lenze × HamelnHack</b>
-                    </span>
-                </footer>
-            </section>
-
-            <!-- Setup-Vorschau ohne Speicherung. Deine Einstellungen haben hier Goldfisch-Gedächtnis. -->
-            <section class="page setup-page" aria-labelledby="setup-heading">
-
-                <div class="page-heading">
-                    <div>
-                        <p class="eyebrow">BEREIT FÜR DIE ERSTE BEWEGUNG</p>
-                        <h1 id="setup-heading">Dein Roboter. Dein Setup.</h1>
-                        <p>Verbindung, Arbeitsraum und Sprache an einem Ort vorbereiten.</p>
+                        <!-- Jeder neue Erkennungsstand wird als transcript:update-Event bereitgestellt. -->
+                        <section class="speech-panel" aria-labelledby="voice-heading">
+                            <div class="panel-header">
+                                <h2 id="voice-heading">Spracheingabe</h2>
+                                <span id="recordingBadge" class="tag">BEREIT</span>
+                            </div>
+                            <div class="speech-body">
+                                <div class="voice-intro">
+                                    <span class="voice-icon" aria-hidden="true">◉</span>
+                                    <div>
+                                        <p class="eyebrow">LIVE TRANSKRIPTION</p>
+                                        <h3>Einfach aussprechen.</h3>
+                                    </div>
+                                </div>
+                                <p id="recordingStatus" class="recording-status" role="status">Bereit für deine Aufnahme.</p>
+                                <div class="record-controls">
+                                    <button id="startButton" class="primary-button">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                            <rect x="9" y="3" width="6" height="12" rx="3"/>
+                                            <path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v3m-4 0h8"/>
+                                        </svg>
+                                        Aufnahme starten
+                                    </button>
+                                    <button id="stopButton" class="secondary-button" disabled>Stop</button>
+                                </div>
+                                <div class="transcript-label">
+                                    <label for="log">Transkript</label>
+                                    <span id="transcriptCount">0 Zeichen</span>
+                                </div>
+                                <textarea id="log" rows="7" readonly placeholder="Deine Worte erscheinen hier – schon während du sprichst."></textarea>
+                                <div class="transcript-actions">
+                                    <button id="copyButton" class="text-button">Kopieren</button>
+                                    <button id="downloadButton" class="text-button">Als Text laden</button>
+                                    <button id="clearButton" class="text-button">Leeren</button>
+                                </div>
+                                <div class="stream-card">
+                                    <div>
+                                        <span class="stream-icon">≋</span>
+                                        <div>
+                                            <strong>Textstream</strong>
+                                            <span id="streamStatus">Browser-Events aktiv</span>
+                                        </div>
+                                        <output id="streamCount">000</output>
+                                    </div>
+                                    <p>Zwischenstände und endgültige Segmente sind für die Weiterverarbeitung verfügbar.</p>
+                                </div>
+                                <p class="privacy-note">Spracherkennung über den Browser; Audiodaten können an dessen Erkennungsdienst gesendet werden. Mikrofonzugriff benötigt HTTPS oder localhost.</p>
+                            </div>
+                        </section>
                     </div>
-                    <span class="demo-tag">Konfigurationsvorschau</span>
-                </div>
-
-                <div class="settings-grid">
-
-                    <section class="form-card">
-                        <span class="card-icon">⌁</span>
-                        <h2>Roboter verbinden</h2>
-                        <p>Gib die Verbindungsdaten deines Roboters ein.</p>
-                        <label for="robot-name">Robotername</label>
-                        <input id="robot-name" type="text" value="Lenze · Roboter 01">
-                        <label for="endpoint">Roboter-Endpunkt</label>
-
-                        <input id="endpoint" type="url" placeholder="ws://192.168.1.100:8080">
-                        <label for="protocol">Verbindungsart</label>
-
-                        <select id="protocol">
-                            <option>WebSocket</option>
-                            <option>HTTP / REST</option>
-                            <option>MQTT</option>
-                        </select>
-
-                        <button class="primary-button" disabled>Verbindung prüfen · Demo</button>
-                        <p class="field-note">Noch keine Verbindung zum Roboter verfügbar.</p>
-                    </section>
-
-                    <section class="form-card">
-                        <span class="card-icon">⌖</span>
-                        <h2>Arbeitsraum definieren</h2>
-                        <p>Grenzen und Koordinatensystem für die Steuerung.</p>
-
-                        <div class="input-row">
-                            <div>
-                                <label for="limit-x">X-Bereich (mm)</label>
-                                <input id="limit-x" type="number" min="0" value="500">
-                            </div>
-                            <div>
-                                <label for="limit-y">Y-Bereich (mm)</label>
-                                <input id="limit-y" type="number" min="0" value="500">
-                            </div>
-                        </div>
-                        <label for="limit-z">Z-Bereich (mm)</label>
-                        <input id="limit-z" type="number" min="0" value="400">
-                        <label for="reference">Koordinatensystem</label>
-                        <select id="reference">
-                            <option>Roboterbasis</option>
-                            <option>Werkzeug / Greifer</option>
-                        </select>
-                        <div class="info-box">Die Kalibrierung und Prüfung der Grenzen erfolgt später mit dem verbundenen Roboter.</div>
-                    </section>
-
-                    <section class="form-card">
-                        <span class="card-icon">◉</span>
-                        <h2>Sprache &amp; KI</h2>
-                        <p>Bereite die Verarbeitung deiner Sprachbefehle vor.</p>
-                        <label for="input-device">Audioquelle</label>
-                        <select id="input-device">
-                            <option>Standardmikrofon · Vorschau</option>
-                        </select>
-                        <label for="setup-language">Erkennungssprache</label>
-                        <select id="setup-language">
-                            <option>Deutsch (de-DE)</option>
-                            <option>English (en-US)</option>
-                        </select>
-
-                        <div class="setup-flow">
-                            <span>
-                                01
-                                <b>Transkribieren</b>
-                            </span>
-                            <span>
-                                02
-                                <b>Befehl interpretieren</b>
-                            </span>
-                            <span>
-                                03
-                                <b>Bewegung bestätigen</b>
-                            </span>
-                        </div>
-                        <p class="field-note">Die Spracherkennung kannst du ganz unten testen. Die KI-Anbindung folgt später.</p>
-                    </section>
-                </div>
-                <p class="save-notice">Prototyp: Eingaben können ausprobiert werden und werden noch nicht gespeichert.</p>
-            </section>
-
-            <!-- Einstellungs-Vorschau ohne Roboterwirkung. Du drehst hier technisch gesehen am Nichts. -->
-            <section class="page settings-page" aria-labelledby="settings-heading">
-
-                <div class="page-heading">
-                    <div>
-                        <p class="eyebrow">SO ARBEITEST DU AM LIEBSTEN</p>
-                        <h1 id="settings-heading">Alles nach deinem Gefühl.</h1>
-                        <p>Passe die Darstellung und die geplante Steuerung an.</p>
+                    <div class="activity-bar">
+                        <span id="workspaceName">LENZE / ROBOTER 01</span>
+                        <span>KI-Übersetzung &amp; Backend in Vorbereitung</span>
+                        <span class="activity-indicator">FRONTEND BEREIT</span>
                     </div>
-                    <span class="demo-tag">Einstellungsvorschau</span>
-                </div>
-
-                <div class="settings-grid settings-two">
-
-                    <section class="form-card">
-                        <h2>Darstellung</h2>
-                        <p>Mehr Orientierung im virtuellen Arbeitsraum.</p>
-
-                        <label class="toggle-row">
-                            <span>
-                                Ist-Position anzeigen
-                                <small>Echten Arm transparent darstellen</small>
-                            </span>
-                            <input type="checkbox" checked>
-                            <span class="switch"></span>
-                        </label>
-
-                        <label class="toggle-row">
-                            <span>
-                                Koordinatengitter
-                                <small>Raster als räumliche Orientierung</small>
-                            </span>
-                            <input type="checkbox" checked>
-                            <span class="switch"></span>
-                        </label>
-                        <label for="opacity">Deckkraft des echten Arms</label>
-                        <div class="range-labels">
-                            <span>Transparent</span>
-                            <span>Deutlich</span>
+                </section>
+                <section id="page-setup" class="page" aria-labelledby="setup-heading" hidden>
+                    <div class="page-heading">
+                        <div>
+                            <p class="eyebrow">VERBINDUNG &amp; ARBEITSRAUM</p>
+                            <h1 id="setup-heading">
+                                System einrichten
+                                <span>.</span>
+                            </h1>
                         </div>
-
-                        <input id="opacity" type="range" min="10" max="80" value="25">
-                        <label for="units">Einheiten</label>
-                        <select id="units">
-                            <option>Millimeter (mm)</option>
-                            <option>Zentimeter (cm)</option>
-                        </select>
-                    </section>
-
-                    <section class="form-card">
-                        <h2>Steuerung &amp; Bestätigung</h2>
-                        <p>Voreinstellungen für die spätere Roboteranbindung.</p>
-                        <label for="speed">Bewegungsgeschwindigkeit</label>
-                        <select id="speed">
-                            <option>Langsam · Präzise</option>
-                            <option>Mittel</option>
-                            <option>Schnell</option>
-                        </select>
-
-                        <label class="toggle-row">
-                            <span>
-                                Bewegung bestätigen
-                                <small>Sprachbefehle vor Ausführung prüfen</small>
-                            </span>
-                            <input type="checkbox" checked>
-                            <span class="switch"></span>
-                        </label>
-
-                        <label class="toggle-row">
-                            <span>
-                                Akustisches Feedback
-                                <small>Bestätigung bei erkanntem Befehl</small>
-                            </span>
-                            <input type="checkbox">
-                            <span class="switch"></span>
-                        </label>
-                        <div class="info-box">Diese Einstellungen zeigen die geplanten Optionen. Sie beeinflussen in diesem Prototyp noch keinen Roboter.</div>
-                    </section>
-                </div>
-                <p class="save-notice">Prototyp: Die Optionen sind bedienbar. Darstellung und Speicherung werden später angebunden.</p>
-            </section>
-
-            <!-- 🚨 NICHT AI SLOP: Sprachskript angebunden. Ab hier dürfen echte Fehler auftreten. -->
-            <section class="speech-test" aria-labelledby="speech-test-heading">
-                <header class="speech-test-heading">
-
-                    <p class="speech-test-emojis" aria-hidden="true">🚨 🔥 🎙️ 🤖 🔥 🚨</p>
-                    <h2 id="speech-test-heading">NICHT AI SLOP</h2>
-                    <p>Hier wird wirklich transkribiert.</p>
-                </header>
-                <div class="speech-test-content">
-                    <h3>Spracherkennung testen</h3>
-                    <p>Drücke auf Start, erlaube den Mikrofonzugriff und sprich. Dein erkannter Text erscheint unten.</p>
-
-                    <!-- Diese IDs braucht JavaScript. Umbenennen ohne Nachdenken ist dein nächster Gratis-Bug. -->
-                    <div class="recording-buttons">
-                        <button id="startButton" type="button">🎙️ Start</button>
-                        <button id="stopButton" type="button" disabled>⏹️ Stop</button>
+                        <p class="page-description">
+                            Lokal arbeiten.
+                            <br>
+                            Backend anschließen, sobald es bereit ist.
+                        </p>
+                    </div>
+                    <div class="setup-grid">
+                        <section class="card">
+                            <p class="eyebrow">TRANSPORT</p>
+                            <h2>Backend-Verbindung</h2>
+                            <p>HTTP-API für den Transkript-Stream. Der WebSocket darunter bleibt für Roboterkoordinaten und Ziele verfügbar.</p>
+                            <label for="robotName">Systemname</label>
+                            <input id="robotName" maxlength="60" value="Lenze / Roboter 01">
+                            <label for="apiUrl">Transkript-API (HTTP POST)</label>
+                            <input id="apiUrl" type="url" placeholder="https://euer-backend.de/transcripts">
+                            <label for="apiKey">API-Key (optional, nur für diese Sitzung)</label>
+                            <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Key später eintragen">
+                            <label class="check-row">
+                                <input id="forwardApi" type="checkbox">
+                                <span>Transkript-Updates an die API senden</span>
+                            </label>
+                            <p id="apiStatus" class="field-note" role="status">API noch nicht konfiguriert.</p>
+                            <p class="field-note">Key wird nicht gespeichert. Dauerhafte Anbieter-Keys gehören ins Backend. Die API muss Browserzugriffe (CORS) und bei Key-Nutzung den Authorization-Header erlauben.</p>
+                            <label for="endpoint">Roboter-WebSocket-Adresse</label>
+                            <input id="endpoint" type="url" placeholder="ws://localhost:8080">
+                            <div class="button-row">
+                                <button id="connectButton" class="primary-button">Verbinden</button>
+                                <button id="disconnectButton" class="secondary-button" disabled>Trennen</button>
+                            </div>
+                            <p id="connectionStatus" class="field-note" role="status">Nicht verbunden. Text bleibt lokal verfügbar.</p>
+                            <label class="check-row">
+                                <input id="forwardTranscript" type="checkbox">
+                                <span>Transkripte zusätzlich über WebSocket senden</span>
+                            </label>
+                            <p class="field-note">Keine automatische Bewegung aus Sprache. Ziele werden nur über „Ziel übertragen“ gesendet.</p>
+                        </section>
+                        <section class="card">
+                            <p class="eyebrow">KOORDINATEN</p>
+                            <h2>Arbeitsraum</h2>
+                            <p>Vorschaugrenzen und übertragene Ziele in Millimetern.</p>
+                            <div class="field-grid">
+                                <div>
+                                    <label for="limitX">X maximal</label>
+                                    <input id="limitX" type="number" min="1" max="10000" value="500" required>
+                                </div>
+                                <div>
+                                    <label for="limitY">Y maximal</label>
+                                    <input id="limitY" type="number" min="1" max="10000" value="500" required>
+                                </div>
+                                <div>
+                                    <label for="limitZ">Z maximal</label>
+                                    <input id="limitZ" type="number" min="1" max="10000" value="400" required>
+                                </div>
+                            </div>
+                            <label for="language">Erkennungssprache</label>
+                            <select id="language">
+                                <option value="de-DE">Deutsch · de-DE</option>
+                                <option value="en-US">English · en-US</option>
+                            </select>
+                            <p class="field-note">Die Sprache lässt sich bei gestoppter Aufnahme ändern. Die Arbeitsraumgrenzen ersetzen keine Kalibrierung am Roboter.</p>
+                        </section>
                     </div>
 
-                    <!-- Statusausgabe für das Sprachskript. -->
-                    <p id="recordingStatus" class="recording-status" role="status">Bereit für deine Aufnahme.</p>
-
-                    <label for="log">Dein transkribierter Text</label>
-
-                    <!-- Ausgabe des erkannten Texts; readonly erlaubt Kopieren. -->
-                    <textarea id="log" rows="8" readonly placeholder="Deine Worte erscheinen hier …"></textarea>
-                    <p class="speech-test-note">Die Spracherkennung läuft über deinen Browser und kann Audio an dessen Spracherkennungsdienst senden. Verwende HTTPS oder localhost für den Mikrofonzugriff. Hier werden noch keine KI- oder Roboterbefehle ausgeführt.</p>
-
-                    <noscript>Bitte aktiviere JavaScript, um die Spracherkennung zu verwenden.</noscript>
-                </div>
-            </section>
-        </main>
-
-        <label class="focus-exit" for="focus-mode">⛶ Ansicht schließen</label>
+                    <!-- Vorläufiger Adaptervertrag, bis das echte Backend-Format feststeht. -->
+                    <details class="protocol-card">
+                        <summary>API- und Stream-Schnittstelle / vorläufiges Format</summary>
+                        <div class="protocol-content">
+                            <p>HTTP-API: Jedes Update wird als JSON mit <code>POST</code> an die konfigurierte Adresse gesendet, optional mit <code>Authorization: Bearer …</code>. Requests werden der Reihe nach verarbeitet. Bei Rückstau werden ältere Zwischenstände desselben Segments ersetzt; endgültige Segmente bleiben geordnet.</p>
+                            <p>Bei Netzwerkfehlern wird die API-Weiterleitung pausiert. Nicht bestätigte Nachrichten werden nicht automatisch wiederholt. Die API muss eine erfolgreiche Verarbeitung mit einem 2xx-Status bestätigen. Ein optionales Telemetrie-JSON in der Antwort aktualisiert den Phantomarm.</p>
+                            <p>
+                                Im Browser:
+                                <code>window.addEventListener("transcript:update", event =&gt; console.log(event.detail))</code>
+                            </p>
+                            <p>
+                                Ein Segment behält seine ID während der Überarbeitung.
+                                <code>text</code>
+                                ersetzt den bisherigen Segmenttext.
+                                <code>isFinal</code>
+                                markiert den Abschluss.
+                                <code>fullText</code>
+                                ist der aktuelle Gesamttext. Zwischenstände nicht einfach aneinanderhängen.
+                            </p>
+                            <pre>{"type":"transcript","sessionId":"…","segmentId":"…:0","sequence":1,
+ "text":"Bewege den Arm","isFinal":false,"fullText":"Bewege den Arm",
+ "language":"de-DE","timestamp":"…"}</pre>
+                            <p>
+                                Abschluss einer Aufnahme:
+                                <code>{"type":"transcript.end","sessionId":"…","sequence":2,"reason":"stopped"}</code>
+                                . Abbruch oder Fehler schließt vorläufige Segmente nicht als endgültig ab. Nicht verbundene Nachrichten werden nicht nachträglich gesendet.
+                            </p>
+                            <p>
+                                Zielausgabe:
+                                <code>{"type":"target","position":{"x":240,"y":125,"z":180},"gripper":"open","units":"mm"}</code>
+                            </p>
+                            <p>
+                                Ist-Position empfangen:
+                                <code>{"type":"telemetry","position":{"x":230,"y":120,"z":175},"units":"mm"}</code>
+                                . Ohne WebSocket kann ein Adapter dieselben Daten über
+                                <code>window.motionInterface.updateTelemetry(message)</code>
+                                einspielen.
+                            </p>
+                            <p>Das Protokoll wird an das Backend angepasst, sobald dessen Schnittstelle feststeht.</p>
+                        </div>
+                    </details>
+                </section>
+                <section id="page-settings" class="page" aria-labelledby="settings-heading" hidden>
+                    <div class="page-heading">
+                        <div>
+                            <p class="eyebrow">DEIN ARBEITSPLATZ</p>
+                            <h1 id="settings-heading">
+                                Ansicht anpassen
+                                <span>.</span>
+                            </h1>
+                        </div>
+                        <p class="page-description">
+                            Einstellungen werden auf
+                            <br>
+                            diesem Gerät gespeichert.
+                        </p>
+                    </div>
+                    <div class="setup-grid">
+                        <section class="card">
+                            <p class="eyebrow">DARSTELLUNG</p>
+                            <h2>Arbeitsraum-Ansicht</h2>
+                            <label class="check-row">
+                                <input id="showGrid" type="checkbox" checked>
+                                <span>Koordinatenraster anzeigen</span>
+                            </label>
+                            <label class="check-row">
+                                <input id="showActual" type="checkbox" checked>
+                                <span>Phantomarm bei verfügbarer Telemetrie anzeigen</span>
+                            </label>
+                            <label for="actualOpacity">Deckkraft des Phantomarms</label>
+                            <input id="actualOpacity" type="range" min="10" max="80" value="30">
+                            <label for="units">Anzeigeeinheit</label>
+                            <select id="units">
+                                <option value="mm">Millimeter · mm</option>
+                                <option value="cm">Zentimeter · cm</option>
+                            </select>
+                        </section>
+                        <section class="card">
+                            <p class="eyebrow">TRANSKRIPTION</p>
+                            <h2>Stream-Verhalten</h2>
+                            <label class="check-row">
+                                <input id="sendInterim" type="checkbox" checked>
+                                <span>Auch Zwischenstände an den Stream ausgeben</span>
+                            </label>
+                            <p>Das Transkript zeigt Zwischenstände immer an. Hier bestimmst du, ob auch die Schnittstelle sie erhält.</p>
+                            <label class="check-row">
+                                <input id="autoRestart" type="checkbox" checked>
+                                <span>Nach automatischem Browser-Stopp weiter aufnehmen</span>
+                            </label>
+                            <p>Kein automatischer Neustart nach Stop, Tab-Wechsel im Browser oder Aufnahmefehler.</p>
+                            <button id="resetSettings" class="secondary-button">Einstellungen zurücksetzen</button>
+                            <p class="field-note">Das Transkript wird nicht dauerhaft gespeichert.</p>
+                        </section>
+                    </div>
+                </section>
+                <p id="appNotice" class="app-notice" role="status"></p>
+                <noscript>Bitte aktiviere JavaScript für Navigation, Vorschau und Spracherkennung.</noscript>
+            </main>
+        </div>
     </body>
 </html>

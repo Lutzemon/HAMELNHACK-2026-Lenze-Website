@@ -1,21 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
-/* Gemeinsame Farben und Schrift. Damit das Chaos wenigstens zusammenpasst. */
+/* Lokale Systemschriften: keine externen Abhängigkeiten. */
 :root {
-    --blue: #0069cc;
-    --ink: #182638;
-    --muted: #687687;
-    --line: #e0e6ec;
-    --lime: #b8f36c;
-    --surface: #fff;
-    --bg: #f1f4f7;
-    font-family: 'DM Sans',Arial,sans-serif;
+    --paper: #eef1f3;
+    --surface: #ffffff;
+    --ink: #171e28;
+    --muted: #67727f;
+    --line: #d9dfe4;
+    --blue: #075df2;
+    --yellow: #e0f16b;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    font-family: 'Segoe UI', Arial, sans-serif;
     color: var(--ink);
-    background: var(--bg);
-    font-synthesis: none;
+    background: var(--paper);
 }
 
-/* Rahmen und Padding mitzählen. CSS-Mathe, du Pixel-Pirat. */
 * {
     box-sizing: border-box;
 }
@@ -24,16 +21,30 @@ body {
     margin: 0;
 }
 
-button,input,select {
+button, input, select, textarea {
     font: inherit;
 }
 
-button,label,select,input[type=range] {
+button, a, input, select, textarea, summary {
     -webkit-tap-highlight-color: transparent;
+}
+
+button {
+    cursor: pointer;
 }
 
 button:disabled {
     cursor: not-allowed;
+    opacity: .42;
+}
+
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid #74a8ff;
+    outline-offset: 4px;
+}
+
+button {
+    transition: background .15s, color .15s;
 }
 
 a {
@@ -41,1568 +52,1123 @@ a {
     text-decoration: none;
 }
 
-/* Unsichtbare, bedienbare Schalter. Versteckt heißt hier ausnahmsweise nicht kaputt. */
-.state-input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-}
-
-h1,h2,p {
+h1, h2, h3, p {
     margin: 0;
 }
 
-h1,h2,.brand,.coordinate-values {
-    font-family: 'Space Grotesk',Arial,sans-serif;
+[hidden] {
+    display: none !important;
 }
 
-/* Kopfzeile mit Logo und Tabs. */
-.topbar {
-    height: 88px;
+.app-header {
+    height: 86px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 4%;
+    gap: 20px;
+    padding: 0 34px;
     background: var(--surface);
     border-bottom: 1px solid var(--line);
-    gap: 25px;
 }
 
 .brand {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 30px;
-    font-weight: 700;
+    gap: 13px;
+    font-size: 31px;
+    font-weight: 750;
     letter-spacing: -1.5px;
-    line-height: 1;
 }
 
-.brand-symbol {
-    height: 40px;
-    width: 40px;
+.brand-mark {
     background: var(--blue);
     color: white;
-    font-size: 30px;
-    padding: 5px;
-    position: relative;
+    padding: 6px 10px;
+    font-size: 25px;
+    letter-spacing: -3px;
 }
 
-.brand-symbol span {
-    position: absolute;
-    font-size: 23px;
-    right: 2px;
-    top: 0;
-}
-
-.brand-sub {
+.brand small {
     display: block;
-    font: 600 10px 'DM Sans',sans-serif;
-    letter-spacing: 2.5px;
-    margin-top: 7px;
-}
-
-.topbar nav {
-    display: flex;
-    align-self: stretch;
-    gap: 36px;
-}
-
-.topbar nav label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    border-bottom: 3px solid transparent;
-    padding-top: 3px;
-    color: var(--muted);
-}
-
-.topbar nav label:hover {
-    color: var(--blue);
-}
-
-.event {
-    font-size: 12px;
+    margin-top: 2px;
+    font: 10px var(--mono);
     letter-spacing: 1.5px;
+}
+
+.event-label {
+    font: 12px var(--mono);
+    letter-spacing: 2px;
     color: var(--muted);
 }
 
-.event b {
+.event-label b {
     color: var(--ink);
-    margin-left: 5px;
 }
 
-/* Inhalt zentrieren und Breite begrenzen. */
-main {
-    max-width: 1600px;
-    margin: auto;
-    padding: 36px 4% 20px;
+.connection-badge {
+    border: 1px solid var(--line);
+    border-radius: 30px;
+    padding: 9px 13px;
+    color: var(--muted);
+    font: 12px var(--mono);
 }
 
-/* Nur den aktiven Tab zeigen. Eine Baustelle gleichzeitig reicht dir offensichtlich. */
-.page {
-    display: none;
+.connection-badge.connected {
+    color: #166644;
+    border-color: #aacdbd;
+    background: #eff9f3;
 }
 
-/* :checked prüft den Tab, ~ erreicht den Hauptinhalt. */
-#control-tab:checked~main .control-page,#setup-tab:checked~main .setup-page,#settings-tab:checked~main .settings-page {
+.app-layout {
+    display: grid;
+    grid-template-columns: 186px minmax(0, 1fr);
+    min-height: calc(100svh - 86px);
+}
+
+.navigation {
+    padding: 35px 16px 22px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-label {
+    font: 10px var(--mono);
+    letter-spacing: 2px;
+    color: var(--muted);
+    padding: 0 14px 16px;
+}
+
+.nav-button {
+    border: 0;
+    background: transparent;
+    padding: 13px 12px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    border-radius: 4px;
+}
+
+.nav-button span {
+    font-size: 19px;
+    margin-right: 9px;
+    vertical-align: middle;
+}
+
+.nav-button:hover {
+    background: #e0e6eb;
+    color: var(--ink);
+}
+
+.nav-button.active {
+    background: var(--ink);
+    color: white;
+}
+
+.nav-bottom {
+    margin-top: auto;
+    padding: 85px 14px 0;
+    color: var(--muted);
+    font: 11px/1.8 var(--mono);
+    letter-spacing: 1px;
+}
+
+.vertical-line {
     display: block;
+    width: 2px;
+    height: 60px;
+    margin-bottom: 20px;
+    background: var(--blue);
 }
 
-/* Aktiven Tab hervorheben. */
-#control-tab:checked~header label[for=control-tab],#setup-tab:checked~header label[for=setup-tab],#settings-tab:checked~header label[for=settings-tab] {
-    color: var(--blue);
-    border-color: var(--blue);
+.nav-bottom small {
+    display: block;
+    font-size: 9px;
+    margin-top: 23px;
 }
 
-/* Tastaturfokus sichtbar machen. Sonst tappt man hier wie du durch Variablennamen. */
-#control-tab:focus-visible~header label[for=control-tab],#setup-tab:focus-visible~header label[for=setup-tab],#settings-tab:focus-visible~header label[for=settings-tab] {
-    outline: 3px solid var(--blue);
-    outline-offset: -6px;
+main {
+    padding: 36px 34px 20px;
+    max-width: 1700px;
+    width: 100%;
+    margin: 0 auto;
+    min-width: 0;
 }
 
-/* Überschrift und Prototyp-Hinweis. */
 .page-heading {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 24px;
-    margin-bottom: 28px;
+    gap: 20px;
+    align-items: end;
+    margin-bottom: 30px;
 }
 
-.eyebrow,.section-kicker {
-    font-size: 11px;
-    letter-spacing: 1.6px;
-    font-weight: 700;
+.eyebrow {
+    font: 10px var(--mono);
+    letter-spacing: 1.8px;
     color: var(--muted);
 }
 
 .page-heading .eyebrow {
     color: var(--blue);
-    margin-bottom: 9px;
+    margin-bottom: 10px;
 }
 
 h1 {
-    font-size: clamp(28px,3vw,42px);
-    letter-spacing: -1.7px;
-    line-height: 1.15;
+    font-size: clamp(30px, 3.5vw, 50px);
+    letter-spacing: -2px;
+    font-weight: 650;
+    line-height: 1.12;
 }
 
-.page-heading p:not(.eyebrow) {
+h1 > span {
+    color: var(--blue);
+}
+
+.page-description {
     color: var(--muted);
-    margin-top: 10px;
-    font-size: 15px;
+    font-size: 13px;
+    line-height: 1.7;
+    text-align: right;
 }
 
-.demo-tag {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid #d9e1e9;
-    background: #eaf0f5;
-    padding: 9px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    color: #536476;
-    white-space: nowrap;
-}
-
-.demo-tag>span {
-    width: 6px;
-    height: 6px;
-    background: #7a8d9f;
-    border-radius: 50%;
-}
-
-/* Arbeitsraum und Sprachkarte nebeneinander. Wenigstens das Grid hat Struktur. */
 .workspace {
     display: grid;
-    grid-template-columns: minmax(0,1fr) 340px;
-    gap: 22px;
+    grid-template-columns: minmax(0, 1.6fr) minmax(310px, 1fr);
+    gap: 20px;
+    align-items: stretch;
 }
 
-/* Dunkler Rahmen des Arbeitsraums. */
-.robot-panel {
-    background: #111d2c;
-    border-radius: 13px;
-    overflow: hidden;
-    border: 1px solid #273547;
-    display: flex;
-    flex-direction: column;
+.robot-panel, .speech-panel {
+    border: 1px solid var(--line);
     min-width: 0;
+    background: var(--surface);
 }
 
-.panel-top {
-    height: 62px;
+.panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 23px;
-    background: #162334;
-    color: #eef4fc;
-    border-bottom: 1px solid #2c3949;
     gap: 10px;
+    min-height: 62px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
 }
 
-.panel-top>div {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+h2 {
+    font-size: 16px;
+    font-weight: 650;
+    letter-spacing: -.3px;
 }
 
-.panel-top h2 {
-    font-size: 15px;
-    font-weight: 500;
+.tag {
+    font: 9px var(--mono);
+    padding: 5px 7px;
+    background: #edf1f5;
+    color: var(--muted);
+    letter-spacing: .6px;
+    white-space: nowrap;
 }
 
-.live-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--lime);
-    box-shadow: 0 0 12px #b8f33433;
+h2 .tag {
+    margin-left: 10px;
+    vertical-align: middle;
 }
 
-.small-label {
-    font-size: 9px;
-    letter-spacing: 1px;
-    color: #8fa2b6;
-    background: #243447;
-    border-radius: 3px;
-    padding: 4px 6px;
-    margin-left: 5px;
-}
-
-.icon-button {
-    display: flex;
-    align-items: center;
-    gap: 7px;
+.text-button {
+    border: 0;
+    padding: 5px 0;
+    background: transparent;
+    color: var(--muted);
     font-size: 12px;
-    color: #a8b7c9;
-    cursor: pointer;
 }
 
-.icon-button:hover {
-    color: white;
+.text-button:hover {
+    color: var(--blue);
 }
 
-.expand-icon {
-    font-size: 21px;
-}
-
-.focus-close {
-    display: none;
-}
-
-/* Greifer-SVG als Mauszeiger. Dein Cursor hat schon mehr Roboterqualifikationen als der Rest. */
+/* Schematische 2D-Ansicht; keine kalibrierte Roboterkinematik. */
 .robot-stage {
     position: relative;
-    flex: 1;
-    min-height: 420px;
+    background: #171e26;
+    color: #3b4856;
     overflow: hidden;
-    background: radial-gradient(ellipse at 48% 35%,#213b52 0, #142436 45%,#101c2b 85%);
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23b8f36c' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M24 3v12M14 15h20M16 15l-7 14 8 12M32 15l7 14-8 12'/%3E%3Ccircle cx='24' cy='24' r='3'/%3E%3C/g%3E%3C/svg%3E") 24 24,crosshair;
+    cursor: crosshair;
+    touch-action: none;
+    user-select: none;
 }
 
-.robot-stage:focus-visible {
-    outline: 2px solid var(--lime);
-    outline-offset: -3px;
-}
-
-.stage-meta {
+.stage-top {
     position: absolute;
-    z-index: 2;
-    top: 23px;
-    left: 24px;
+    z-index: 1;
+    left: 22px;
+    right: 22px;
+    top: 22px;
     display: flex;
-    flex-direction: column;
-    gap: 7px;
+    justify-content: space-between;
+    gap: 12px;
     pointer-events: none;
 }
 
 .stage-label {
-    font-size: 10px;
-    letter-spacing: 1.8px;
-    font-weight: 600;
-    color: var(--lime);
+    font: 10px var(--mono);
+    color: var(--yellow);
+    letter-spacing: 1px;
 }
 
-.stage-note {
-    font-size: 12px;
-    color: #8fa1b5;
+#stageHint {
+    color: #8a97a6;
+    font: 10px var(--mono);
+    text-align: right;
 }
 
-/* Bodenraster aus Verläufen und Perspektive. Räumliches Denken zum Nachrüsten. */
-.stage-grid {
-    position: absolute;
-    width: 150%;
-    height: 95%;
-    left: -25%;
-    bottom: -42%;
-    background-image: linear-gradient(#6686a52b 1px,transparent 1px),linear-gradient(90deg,#6686a52b 1px,transparent 1px);
-    background-size: 48px 48px;
-    transform: perspective(450px) rotateX(59deg);
-    mask-image: linear-gradient(transparent,#000 38%);
-    pointer-events: none;
-}
-
-/* SVG an die verfügbare Fläche anpassen. */
-.robot-illustration {
+#robotDrawing {
     display: block;
-    position: relative;
     width: 100%;
-    height: 100%;
-    max-height: 510px;
-    min-height: 420px;
+    height: 430px;
     pointer-events: none;
 }
 
-/* Deckkraft der Ist-Arm-Vorschau. Transparenter als deine Debugging-Strategie. */
-.ghost-arm {
-    opacity: .19;
+.grid-layer {
+    opacity: .45;
 }
 
-/* Kleine Koordinatenachsen links unten. */
-.axis {
+.reach-ring {
+    stroke: #728aa722;
+    stroke-width: 1;
+    fill: none;
+    stroke-dasharray: 3 8;
+}
+
+.base-line {
+    stroke: #74869b;
+    stroke-width: 7;
+}
+
+.virtual-arm path {
+    fill: none;
+    stroke: #d4dde5;
+    stroke-width: 23;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.virtual-arm .arm-shadow {
+    stroke: #080d14;
+    stroke-width: 40;
+    transform: translate(4px, 6px);
+}
+
+.virtual-arm circle {
+    fill: #075df2;
+    stroke: #9cc3ff;
+    stroke-width: 4;
+}
+
+.virtual-arm .base-joint {
+    fill: #273b50;
+    stroke: #8ca4ba;
+}
+
+.actual-arm {
+    opacity: .3;
+}
+
+.actual-arm path {
+    stroke: #9eaebe;
+    stroke-width: 25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.actual-arm circle {
+    fill: #9eaebe;
+}
+
+.target-marker {
+    stroke: var(--yellow);
+    stroke-width: 2;
+    fill: none;
+}
+
+.target-marker circle {
+    stroke-dasharray: 3 6;
+}
+
+#gripperDrawing {
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.axis-label {
+    fill: #899aaa;
+    font: 12px var(--mono);
+}
+
+.stage-bottom {
     position: absolute;
-    left: 29px;
-    bottom: 57px;
-    width: 48px;
-    height: 48px;
-    font: 10px monospace;
-    color: #9fb1c4;
-    pointer-events: none;
-}
-
-.axis i {
-    position: absolute;
-    left: 12px;
-    bottom: 10px;
-    width: 27px;
-    border-top: 1px solid #d98484;
-    transform: rotate(20deg);
-    transform-origin: left;
-}
-
-/* Zusätzliche Achsenlinien ohne weiteres HTML. */
-.axis i:before,.axis i:after {
-    content: '';
-    position: absolute;
-    left: 0;
-    width: 27px;
-    border-top: 1px solid #91c5a0;
-    transform: rotate(-55deg);
-    transform-origin: left;
-}
-
-.axis i:after {
-    border-color: #71a4d4;
-    transform: rotate(-110deg);
-}
-
-.axis-z {
-    position: absolute;
-    top: 0;
-    left: 9px;
-}
-
-.axis-y {
-    position: absolute;
-    right: 0;
-    top: 16px;
-}
-
-.axis-x {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-}
-
-/* Farblegende im Arbeitsraum. */
-.stage-legend {
-    position: absolute;
-    left: 24px;
-    bottom: 19px;
-    display: flex;
-    gap: 20px;
-    color: #afbdce;
-    font-size: 11px;
-    pointer-events: none;
-}
-
-.stage-legend span {
+    left: 22px;
+    right: 22px;
+    bottom: 18px;
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 18px;
+    color: #a0afbf;
+    font: 10px var(--mono);
+    pointer-events: none;
 }
 
-.stage-legend i {
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
+.stage-bottom > span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.legend-target {
-    background: var(--lime);
+.stage-bottom b {
+    font-weight: 400;
+    color: #788a9e;
 }
 
-.legend-actual {
-    background: #7c96b1;
-    opacity: .5;
+.stage-bottom .stage-scale {
+    margin-left: auto;
+    font-size: 8px;
+    letter-spacing: 1px;
 }
 
-.touch-hint {
-    display: none;
+.swatch {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
 }
 
-/* Beispielkoordinaten und Greiferstatus. */
+.target-swatch {
+    background: var(--yellow);
+}
+
+.actual-swatch {
+    background: #9eaebe;
+    opacity: .4;
+}
+
+.position-strip {
+    flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 20px;
+    border-bottom: 1px solid var(--line);
+}
+
 .coordinates {
+    flex-wrap: wrap;
+    display: flex;
+    gap: 23px;
+    align-items: baseline;
+    margin-top: 10px;
+    font: 12px var(--mono);
+    color: var(--muted);
+}
+
+.coordinates output {
+    font-size: 22px;
+    color: var(--ink);
+    letter-spacing: -1px;
+}
+
+.coordinates small {
+    font-size: 10px;
+}
+
+.gripper-button {
+    border: 1px solid var(--line);
+    background: #f7f9fb;
+    color: var(--muted);
+    padding: 10px 13px;
+    font-size: 11px;
+}
+
+.gripper-button b {
+    display: block;
+    color: var(--blue);
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+.robot-tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px 6px;
+}
+
+.robot-tools label {
+    font: 10px var(--mono);
+    white-space: nowrap;
+}
+
+.robot-tools label span {
+    color: var(--muted);
+}
+
+.robot-tools input {
+    flex: 1;
+    min-width: 40px;
+}
+
+.primary-button, .secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 11px 15px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.primary-button {
+    background: var(--blue);
+    color: white;
+}
+
+.primary-button:hover:not(:disabled) {
+    background: #004aca;
+}
+
+.secondary-button {
+    background: #f5f7f9;
+    border-color: var(--line);
+    color: var(--ink);
+}
+
+.secondary-button:hover:not(:disabled) {
+    background: #e7ecf2;
+}
+
+.panel-note {
+    padding: 8px 20px 15px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.speech-body {
+    padding: 24px;
+}
+
+.voice-intro {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.voice-icon {
+    font-size: 30px;
+    color: var(--blue);
+    border: 1px solid #cbdcff;
+    border-radius: 50%;
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+}
+
+h3 {
+    font-size: 23px;
+    font-weight: 600;
+    letter-spacing: -.6px;
+    margin-top: 6px;
+}
+
+.recording-status {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 42px;
+}
+
+.record-controls {
+    display: flex;
+    gap: 9px;
+    margin: 18px 0 25px;
+}
+
+.record-controls .primary-button {
+    flex: 1;
+}
+
+.record-controls svg {
+    width: 18px;
+    height: 18px;
+}
+
+.transcript-label {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 20px;
-    padding: 21px 25px;
-    background: #172637;
-    border-top: 1px solid #2c3b4e;
-    color: #f1f6fc;
-}
-
-.coordinates .eyebrow {
-    color: #94a7bc;
-    font-size: 10px;
-    letter-spacing: 1.3px;
-}
-
-.coordinates .eyebrow small {
-    font-size: 9px;
-    color: #647e98;
-    margin-left: 12px;
-}
-
-.coordinate-values {
-    display: flex;
-    gap: 29px;
-    margin-top: 10px;
-    font-size: 22px;
-}
-
-.coordinate-values b {
     font-size: 12px;
-    color: #74b4ed;
-    font-weight: 500;
-    margin-right: 7px;
+    margin-bottom: 10px;
 }
 
-.coordinate-values small {
-    font-family: 'DM Sans',sans-serif;
-    font-size: 11px;
-    color: #7b91a8;
+.transcript-label > span {
+    color: var(--muted);
+    font: 10px var(--mono);
 }
 
-.gripper-state {
+#log {
+    background: #f6f8fa;
+    border: 1px solid var(--line);
+    width: 100%;
+    resize: vertical;
+    min-height: 170px;
+    padding: 15px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ink);
+    border-radius: 3px;
+}
+
+#log::placeholder {
+    color: #919ba8;
+    font-size: 13px;
+}
+
+.transcript-actions {
     display: flex;
-    gap: 10px;
-    align-items: center;
-    font-size: 11px;
-    color: #8da2b8;
+    gap: 19px;
+    margin: 9px 0 23px;
 }
 
-.gripper-state strong {
+.stream-card {
+    background: #eef3fc;
+    border-left: 2px solid var(--blue);
+    padding: 15px;
+}
+
+.stream-card > div {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.stream-icon {
+    color: var(--blue);
+    font-size: 26px;
+}
+
+.stream-card strong {
     display: block;
-    color: var(--lime);
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stream-card span:not(.stream-icon) {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
     margin-top: 4px;
 }
 
-.gripper-symbol {
-    font-size: 35px;
-    color: var(--lime);
-}
-
-/* Sprach-Demo, noch ohne echte Aufnahme. */
-.command-panel {
-    background: white;
-    border: 1px solid var(--line);
-    border-radius: 13px;
-    padding: 27px 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-}
-
-.section-kicker {
+.stream-card output {
+    margin-left: auto;
+    font: 22px var(--mono);
     color: var(--blue);
-    font-size: 10px;
-    letter-spacing: 1.2px;
 }
 
-.command-panel h2 {
-    font-size: 25px;
-    line-height: 1.2;
-    letter-spacing: -.8px;
+.stream-card p {
+    color: #6b7d96;
     margin-top: 12px;
-    max-width: 250px;
-}
-
-.command-panel>p {
-    color: var(--muted);
-    font-size: 14px;
+    font-size: 11px;
     line-height: 1.6;
-    margin-top: 9px;
 }
 
-.mic-button {
-    display: grid;
-    place-items: center;
-    align-self: center;
-    width: 75px;
-    height: 75px;
-    border-radius: 50%;
-    background: var(--blue);
-    color: white;
-    margin: 26px 0 15px;
-    cursor: pointer;
-    box-shadow: 0 0 0 8px #edf5fd;
-    transition: background .2s,box-shadow .2s;
-}
-
-.mic-button:hover {
-    background: #0053a3;
-    box-shadow: 0 0 0 11px #edf5fd;
-}
-
-.mic-button svg {
-    width: 29px;
-    height: 29px;
-}
-
-.mic-status {
-    text-align: center;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.mic-status small {
-    display: block;
+.privacy-note {
     font-size: 10px;
-    font-weight: 400;
-    color: #8b96a5;
-    margin-top: 6px;
-}
-
-.mic-active {
-    display: none;
-}
-
-/* Demo-Checkbox steuert Farben und Status. */
-#mic-preview:checked~.mic-button {
-    background: #1e714e;
-    box-shadow: 0 0 0 9px #e1f4e9;
-}
-
-#mic-preview:checked~.mic-status .mic-idle {
-    display: none;
-}
-
-#mic-preview:checked~.mic-status .mic-active {
-    display: inline;
-    color: #1e714e;
-}
-
-#mic-preview:focus-visible~.mic-button {
-    outline: 3px solid var(--blue);
-    outline-offset: 12px;
-}
-
-/* Dekorative Wellenform, keine Audiodaten. Hübsches Gezappel ist noch keine Funktion. */
-.waveform {
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    margin: 15px 0;
-}
-
-.waveform i {
-    width: 3px;
-    height: 6px;
-    background: #c4d7e9;
-    border-radius: 3px;
-}
-
-.waveform i:nth-child(3n) {
-    height: 17px;
-}
-
-.waveform i:nth-child(4n) {
-    height: 26px;
-}
-
-.waveform i:nth-child(5n) {
-    height: 12px;
-}
-
-#mic-preview:checked~.waveform i {
-    background: #66a782;
-    animation: wave .8s ease-in-out infinite alternate;
-}
-
-#mic-preview:checked~.waveform i:nth-child(3n) {
-    animation-delay: -.5s;
-}
-
-#mic-preview:checked~.waveform i:nth-child(4n) {
-    animation-delay: -.2s;
-}
-
-/* Demo-Balken animieren. Hier bewegt sich wenigstens irgendwas. */
-@keyframes wave {
-    to {
-        transform: scaleY(.35);
-    }
-
-}
-
-.transcript {
-    background: #f4f7fa;
-    border-radius: 8px;
-    padding: 15px;
-}
-
-.transcript .eyebrow,.command-preview .eyebrow {
-    font-size: 9px;
-    letter-spacing: .9px;
-}
-
-.transcript p {
-    font-size: 16px;
-    line-height: 1.5;
-    margin: 10px 0;
-    color: #33465b;
-}
-
-.example-tag {
-    font-size: 10px;
-    color: #8794a2;
-}
-
-.command-flow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 11px;
-    margin: 20px 0;
-    color: #64758a;
-    font-size: 11px;
-}
-
-.flow-line {
-    height: 1px;
-    background: #ccd6e0;
-    flex: 1;
-    max-width: 29px;
-}
-
-.command-preview {
-    margin-bottom: 21px;
-}
-
-.command-preview code {
-    display: block;
-    font-size: 11px;
-    line-height: 1.9;
-    margin-top: 10px;
-    color: #6b7b8d;
-}
-
-.command-preview code span {
-    color: var(--blue);
-}
-
-/* Gemeinsamer Stil der Prototyp-Buttons. */
-.primary-button {
-    border: 0;
-    background: var(--blue);
-    color: white;
-    border-radius: 6px;
-    padding: 13px 15px;
-    font-weight: 600;
-    font-size: 13px;
-    width: 100%;
-}
-
-.primary-button:disabled {
-    background: #e7eef5;
-    color: #778a9d;
-}
-
-.primary-button span {
-    font-size: 9px;
-    letter-spacing: .6px;
-    margin-left: 10px;
-    background: #d6e1eb;
-    padding: 3px 5px;
-    border-radius: 3px;
-}
-
-.command-panel .panel-footnote {
-    font-size: 10px;
-    line-height: 1.5;
-    text-align: center;
-    margin-top: 11px;
-    color: #8a97a5;
-}
-
-.workspace-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 18px;
-    color: #8793a2;
-    font-size: 11px;
-    gap: 20px;
-}
-
-.workspace-footer>span:first-child {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.workspace-footer b {
-    font-weight: 500;
-    color: #526478;
-    margin-left: 8px;
-}
-
-.connection-dot {
-    width: 6px;
-    height: 6px;
-    background: #a1acb8;
-    border-radius: 50%;
-}
-
-/* Raster für Setup- und Einstellungskarten. */
-.settings-grid {
-    display: grid;
-    grid-template-columns: repeat(3,minmax(0,1fr));
-    gap: 22px;
-}
-
-.form-card {
-    padding: 28px;
-    background: white;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-}
-
-.card-icon {
-    display: grid;
-    place-items: center;
-    background: #edf5fd;
-    color: var(--blue);
-    width: 40px;
-    height: 40px;
-    border-radius: 9px;
-    font-size: 27px;
-    margin-bottom: 22px;
-}
-
-.form-card h2 {
-    font-size: 21px;
-    letter-spacing: -.5px;
-}
-
-.form-card>p {
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--muted);
-    margin: 10px 0 24px;
-}
-
-.form-card>label:not(.toggle-row),.input-row label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    margin: 20px 0 9px;
-}
-
-.form-card input:not([type=checkbox]):not([type=range]),.form-card select {
-    width: 100%;
-    min-width: 0;
-    border: 1px solid #d7e0e9;
-    border-radius: 6px;
-    background: #f9fbfd;
-    color: var(--ink);
-    padding: 12px;
-    font-size: 14px;
-    min-height: 44px;
-}
-
-/* Eigener SVG-Pfeil für Auswahllisten. */
-.form-card select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%23687788' stroke-width='1.5'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 13px center;
-    padding-right: 34px;
-}
-
-.form-card .primary-button {
-    margin-top: 23px;
-}
-
-.form-card .field-note {
-    font-size: 12px;
-    margin: 13px 0 0;
-}
-
-.input-row {
-    display: flex;
-    gap: 12px;
-}
-
-.input-row>div {
-    flex: 1;
-    min-width: 0;
-}
-
-.info-box {
-    background: #eef5fc;
-    border-left: 2px solid #8dbde7;
-    padding: 15px;
-    margin-top: 24px;
-    font-size: 13px;
     line-height: 1.7;
-    color: #526d89;
-}
-
-.setup-flow {
-    display: grid;
-    gap: 16px;
-    margin-top: 28px;
-    font-size: 12px;
-    color: #6a9bc6;
-}
-
-.setup-flow b {
-    font-size: 13px;
-    color: #425971;
-    font-weight: 500;
-    margin-left: 13px;
-}
-
-.save-notice {
-    font-size: 13px;
     color: var(--muted);
-    margin-top: 24px;
+    margin-top: 18px;
 }
 
-.settings-two {
-    grid-template-columns: repeat(2,minmax(0,1fr));
-    max-width: 1050px;
+.recording #recordingBadge {
+    background: #ffe8e6;
+    color: #ae3022;
 }
 
-/* Anklickbare Zeile mit Checkbox-Schalter. */
-.toggle-row {
+.recording .voice-icon {
+    color: #ba4430;
+    background: #fff1ed;
+    border-color: #f4c2b3;
+}
+
+.activity-bar {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: 20px;
-    padding: 21px 0;
-    border-bottom: 1px solid var(--line);
-    cursor: pointer;
+    gap: 16px;
+    color: var(--muted);
+    font: 9px var(--mono);
+    letter-spacing: .7px;
+    margin-top: 20px;
+}
+
+.activity-indicator {
+    color: var(--blue);
+}
+
+.setup-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    max-width: 1100px;
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 28px;
+}
+
+.card h2 {
+    font-size: 24px;
+    margin: 10px 0 15px;
+}
+
+.card p, .protocol-content p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.card > label:not(.check-row), .field-grid label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 23px 0 9px;
+}
+
+.card input:not([type=checkbox]):not([type=range]), .card select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    background: #f8fafc;
+    border-radius: 3px;
+    color: var(--ink);
     font-size: 14px;
 }
 
-.toggle-row small {
-    display: block;
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 6px;
-    line-height: 1.5;
-}
-
-/* Echte Checkbox optisch durch .switch ersetzen. */
-.toggle-row input {
-    position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
-}
-
-.switch {
-    flex-shrink: 0;
-    width: 38px;
-    height: 22px;
-    border-radius: 20px;
-    background: #d5dfe9;
-    position: relative;
-    transition: background .2s;
-}
-
-/* Weißer Knopf des Schalters. */
-.switch:after {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: white;
-    left: 3px;
-    top: 3px;
-    box-shadow: 0 1px 3px #15233220;
-    transition: transform .2s;
-}
-
-/* + erreicht den Schalter direkt nach der Checkbox. */
-.toggle-row input:checked+.switch {
-    background: var(--blue);
-}
-
-.toggle-row input:checked+.switch:after {
-    transform: translateX(16px);
-}
-
-.toggle-row input:focus-visible+.switch {
-    outline: 3px solid #70b7ff;
-    outline-offset: 3px;
-}
-
-.range-labels {
-    display: flex;
-    justify-content: space-between;
-    color: var(--muted);
-    font-size: 12px;
-    margin: 15px 0 7px;
+input[type=range], input[type=checkbox] {
+    accent-color: var(--blue);
 }
 
 input[type=range] {
     width: 100%;
-    accent-color: var(--blue);
 }
 
-input:focus-visible,select:focus-visible {
-    outline: 2px solid var(--blue);
-    outline-offset: 3px;
+input[type=checkbox] {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
 }
 
-.focus-exit {
+.button-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.card .field-note {
+    font-size: 12px;
+    margin-top: 14px;
+}
+
+.check-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 21px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.field-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+#resetSettings {
+    margin-top: 24px;
+}
+
+.protocol-card {
+    max-width: 1100px;
+    background: #e7ecf1;
+    border: 1px solid var(--line);
+    margin-top: 22px;
+    padding: 20px 25px;
+}
+
+.protocol-card summary {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.protocol-content {
+    margin-top: 20px;
+}
+
+.protocol-content p {
+    margin-bottom: 15px;
+    overflow-wrap: anywhere;
+}
+
+code, pre {
+    font-family: var(--mono);
+    font-size: 12px;
+}
+
+pre {
+    overflow-x: auto;
+    background: #17212e;
+    color: #d4e5ff;
+    padding: 18px;
+    line-height: 1.8;
+    margin: 15px 0;
+}
+
+.app-notice {
+    color: var(--blue);
+    font-size: 13px;
+    margin-top: 18px;
+    min-height: 20px;
+}
+
+/* Vergrößerte Ansicht ohne Browser-Fullscreen-Abhängigkeit. */
+body.focus-mode .app-header, body.focus-mode .navigation, body.focus-mode .page-heading, body.focus-mode .speech-panel, body.focus-mode .activity-bar, body.focus-mode .app-notice {
     display: none;
 }
 
-/* Nebenelemente in der vergrößerten Ansicht ausblenden. */
-#focus-mode:checked~header,#focus-mode:checked~main .page-heading,#focus-mode:checked~main .command-panel,#focus-mode:checked~main .workspace-footer {
-    display: none;
+body.focus-mode .app-layout {
+    display: block;
 }
 
-#focus-mode:checked~main {
+body.focus-mode main {
     padding: 0;
     max-width: none;
 }
 
-#focus-mode:checked~main .workspace {
+body.focus-mode .workspace {
     display: block;
 }
 
-/* Arbeitsraum auf Bildschirmhöhe erweitern. */
-#focus-mode:checked~main .robot-panel {
-    border-radius: 0;
+body.focus-mode .robot-panel {
     min-height: 100svh;
+    display: flex;
+    flex-direction: column;
 }
 
-#focus-mode:checked~main .robot-stage {
+body.focus-mode .robot-stage {
+    flex: 1;
     display: grid;
-    place-items: center;
+    align-items: center;
 }
 
-#focus-mode:checked~main .robot-illustration {
-    max-height: calc(100svh - 165px);
-    height: calc(100svh - 165px);
+body.focus-mode #robotDrawing {
+    height: calc(100svh - 265px);
+    min-height: 260px;
 }
 
-#focus-mode:checked~main .focus-open {
-    display: none;
-}
+@media (min-width: 1600px) {
+    #robotDrawing {
+        height: 500px;
+    }
 
-#focus-mode:checked~main .focus-close {
-    display: inline;
-}
-
-#focus-mode:focus-visible~main .focus-button {
-    outline: 2px solid var(--lime);
-    outline-offset: 4px;
-}
-
-/* Großer Desktop: mehr Platz für den Arbeitsraum. */
-@media(min-width:1550px) {
     main {
         padding-top: 45px;
     }
 
-    .robot-stage {
-        min-height: 500px;
-    }
-
-    .robot-illustration {
-        max-height: 560px;
-    }
-
 }
 
-/* Kleiner Desktop: kompaktere Abstände. */
-@media(max-width:1100px) {
-    .workspace {
-        grid-template-columns: minmax(0,1fr) 300px;
-        gap: 16px;
-    }
-
-    .command-panel {
-        padding: 23px 20px;
-    }
-
-    .coordinate-values {
-        gap: 18px;
-        font-size: 19px;
-    }
-
-    .coordinates {
-        padding: 19px;
-    }
-
-    .coordinates .eyebrow small {
-        display: block;
-        margin: 4px 0 0;
-    }
-
-    .settings-grid {
-        gap: 14px;
-    }
-
-    .form-card {
-        padding: 23px;
-    }
-
-    .small-label {
-        display: none;
-    }
-
-    .event {
-        font-size: 10px;
-    }
-
-    .robot-stage,.robot-illustration {
-        min-height: 400px;
-    }
-
-}
-
-/* Tablet: Hauptbereiche untereinander. */
-@media(max-width:850px) {
-    .topbar {
-        padding: 0 5%;
-        height: 78px;
-    }
-
-    .event {
-        display: none;
-    }
-
-    .topbar nav {
-        gap: 23px;
+@media (max-width: 1200px) {
+    .app-layout {
+        grid-template-columns: 150px minmax(0, 1fr);
     }
 
     main {
-        padding: 28px 5%;
+        padding: 30px 23px;
     }
 
-    .page-heading {
-        align-items: flex-start;
-        flex-direction: column;
+    .navigation {
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+
+    .workspace {
+        grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr);
         gap: 16px;
     }
 
-    .page-heading p:not(.eyebrow) {
-        font-size: 14px;
-        line-height: 1.6;
+    .speech-body {
+        padding: 20px;
     }
 
+    .robot-tools {
+        flex-wrap: wrap;
+    }
+
+    .robot-tools input {
+        flex-basis: 50%;
+    }
+
+    .robot-tools button {
+        flex: 1;
+    }
+
+    .stage-scale, h2 .tag {
+        display: none !important;
+    }
+
+    .page-description {
+        font-size: 11px;
+    }
+
+}
+
+@media (max-width: 950px) {
     .workspace {
         grid-template-columns: 1fr;
     }
 
-    .robot-stage {
-        min-height: 370px;
+    .speech-body {
+        padding: 24px;
     }
 
-    .robot-illustration {
-        height: 410px;
-        min-height: 370px;
+    #robotDrawing {
+        height: 400px;
     }
 
-    .command-panel {
-        padding: 25px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        column-gap: 24px;
-        align-items: start;
+    .robot-tools {
+        flex-wrap: nowrap;
     }
 
-    .section-kicker,.command-panel h2,.command-panel>p:not(.panel-footnote) {
-        grid-column: 1;
+    .robot-tools input {
+        flex-basis: auto;
     }
 
-    .command-panel h2 {
-        max-width: none;
-        font-size: 27px;
+    .robot-tools button {
+        flex: none;
     }
 
-    .mic-button {
-        grid-column: 1;
-        grid-row: 4;
-        justify-self: center;
-        margin-top: 24px;
+    .activity-bar > span:nth-child(2) {
+        display: none;
     }
 
-    .mic-status {
-        grid-column: 1;
-        grid-row: 5;
-    }
-
-    .waveform {
-        grid-column: 1;
-        grid-row: 6;
-    }
-
-    .transcript {
-        grid-column: 2;
-        grid-row: 1 / 5;
-    }
-
-    .command-flow {
-        grid-column: 2;
-        grid-row: 5;
-    }
-
-    .command-preview {
-        grid-column: 2;
-        grid-row: 6;
-    }
-
-    .command-panel .primary-button {
-        grid-column: 1 / -1;
-    }
-
-    .command-panel .panel-footnote {
-        grid-column: 1 / -1;
-    }
-
-    .settings-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .setup-page .form-card:last-child {
-        grid-column: 1 / -1;
-    }
-
-    .settings-two {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .workspace-footer {
-        font-size: 10px;
-    }
-
-    .workspace-footer>span:last-child {
-        font-size: 0;
-    }
-
-    .workspace-footer b {
-        font-size: 10px;
+    .setup-grid {
+        grid-template-columns: 1fr;
     }
 
 }
 
-/* Handy: eine Spalte. Dein Daumen braucht keinen Hindernisparcours. */
-@media(max-width:560px) {
-    .topbar {
-        height: auto;
-        flex-wrap: wrap;
-        padding: 18px 20px 0;
-        gap: 18px;
+@media (max-width: 650px) {
+    .app-header {
+        height: 76px;
+        padding: 0 18px;
     }
 
     .brand {
-        font-size: 26px;
+        font-size: 27px;
     }
 
-    .brand-symbol {
-        width: 35px;
-        height: 35px;
-        font-size: 26px;
+    .brand small {
+        font-size: 8px;
     }
 
-    .brand-sub {
+    .brand-mark {
+        font-size: 23px;
+    }
+
+    .event-label {
+        display: none;
+    }
+
+    .connection-badge {
         font-size: 9px;
+        padding: 7px 9px;
     }
 
-    .topbar nav {
-        width: 100%;
-        height: 44px;
-        gap: 0;
-        justify-content: space-between;
+    .app-layout {
+        display: block;
     }
 
-    .topbar nav label {
-        font-size: 13px;
-        padding: 0 9px;
+    .navigation {
+        padding: 9px 12px;
+        flex-direction: row;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        background: white;
+        gap: 5px;
+    }
+
+    .nav-label, .nav-bottom {
+        display: none;
+    }
+
+    .nav-button {
+        flex: 1;
+        text-align: center;
+        font-size: 12px;
+        padding: 10px 5px;
+    }
+
+    .nav-button span {
+        font-size: 15px;
+        margin-right: 4px;
     }
 
     main {
-        padding: 25px 16px 20px;
-    }
-
-    .eyebrow {
-        font-size: 10px;
+        padding: 27px 15px 18px;
     }
 
     .page-heading {
-        margin-bottom: 20px;
+        margin-bottom: 23px;
     }
 
     h1 {
-        font-size: 32px;
-        letter-spacing: -1.2px;
+        font-size: 34px;
+        letter-spacing: -1.5px;
     }
 
-    .demo-tag {
-        font-size: 10px;
-        padding: 7px 10px;
+    .page-description {
+        display: none;
     }
 
-    .panel-top {
-        padding: 0 15px;
-        height: 54px;
+    .panel-header {
+        padding: 16px;
     }
 
-    .panel-top h2 {
+    .panel-header h2 {
         font-size: 14px;
     }
 
-    .focus-button {
-        font-size: 0;
-        gap: 0;
+    .text-button {
+        font-size: 11px;
     }
 
-    .expand-icon {
-        font-size: 24px;
+    #robotDrawing {
+        height: 340px;
     }
 
-    .robot-stage {
-        min-height: 330px;
+    .stage-top {
+        left: 16px;
+        right: 16px;
+        top: 18px;
     }
 
-    .robot-illustration {
-        height: 350px;
-        min-height: 330px;
-        width: 115%;
-        margin-left: -7.5%;
-    }
-
-    .stage-meta {
-        top: 19px;
-        left: 17px;
+    #stageHint {
+        max-width: 135px;
+        font-size: 9px;
+        line-height: 1.6;
     }
 
     .stage-label {
         font-size: 9px;
     }
 
-    .stage-note {
-        display: none;
-    }
-
-    .stage-legend {
-        left: 15px;
-        bottom: 15px;
-        gap: 13px;
+    .stage-bottom {
+        left: 16px;
+        right: 16px;
         font-size: 9px;
+        gap: 13px;
     }
 
-    .axis {
-        left: 19px;
-        bottom: 48px;
+    .position-strip {
+        padding: 18px 16px;
     }
 
     .coordinates {
-        padding: 16px 15px;
+        gap: 16px;
+    }
+
+    .coordinates output {
+        font-size: 20px;
+    }
+
+    .robot-tools {
+        padding: 16px 16px 6px;
+        flex-wrap: wrap;
+    }
+
+    .robot-tools input {
+        flex-basis: 60%;
+    }
+
+    .robot-tools button {
+        flex: 1;
+    }
+
+    .speech-body {
+        padding: 22px 18px;
+    }
+
+    .card {
+        padding: 24px 20px;
+    }
+
+    .field-grid {
+        gap: 9px;
+    }
+
+    .protocol-card {
+        padding: 18px;
+    }
+
+    .activity-bar {
+        font-size: 8px;
         gap: 10px;
     }
 
-    .coordinates .eyebrow {
-        font-size: 9px;
-        letter-spacing: 1px;
-    }
-
-    .coordinates .eyebrow small {
-        display: inline;
-        font-size: 8px;
-        letter-spacing: .3px;
-        margin-left: 5px;
-    }
-
-    .coordinate-values {
-        font-size: 18px;
-        gap: 14px;
-    }
-
-    .coordinate-values b {
-        font-size: 10px;
-        margin-right: 3px;
-    }
-
-    .coordinate-values small {
-        font-size: 9px;
-    }
-
-    .gripper-state {
-        gap: 6px;
-        font-size: 9px;
-    }
-
-    .gripper-symbol {
-        font-size: 27px;
-    }
-
-    .gripper-state strong {
-        font-size: 12px;
-    }
-
-    .command-panel {
-        display: flex;
-        padding: 25px;
-    }
-
-    .command-panel h2 {
-        font-size: 28px;
-        max-width: 270px;
-    }
-
-    .mic-button {
-        margin-top: 27px;
-    }
-
-    .transcript {
-        width: 100%;
-    }
-
-    .waveform {
-        margin: 15px 0 20px;
-    }
-
-    .command-panel .primary-button {
-        min-height: 46px;
-    }
-
-    .command-panel .panel-footnote {
+    .privacy-note {
         font-size: 11px;
     }
 
-    .settings-grid,.settings-two {
-        grid-template-columns: 1fr;
-    }
+}
 
-    .setup-page .form-card:last-child {
-        grid-column: auto;
-    }
-
-    .form-card {
-        padding: 24px;
-    }
-
-    .workspace-footer {
-        gap: 10px;
-        line-height: 1.7;
-    }
-
-    .workspace-footer b {
-        margin-left: 0;
-        font-size: 9px;
-    }
-
-    .workspace-footer>span:first-child {
-        font-size: 10px;
-    }
-
-    .focus-exit {
-        font-size: 12px;
-    }
-
-    #focus-mode:checked~main .robot-illustration {
-        width: 125%;
-        margin-left: 0;
-    }
-
-    #focus-mode:checked~main .focus-close {
-        display: none;
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
     }
 
 }
 
-/* Touch-Hinweis statt Maus-Hinweis. */
-@media(pointer:coarse) {
-    .stage-note {
-        display: none;
-    }
-
-    .touch-hint {
-        display: block;
-        position: absolute;
-        right: 16px;
-        top: 24px;
-        color: #8fa1b5;
-        font-size: 10px;
-        pointer-events: none;
-    }
-
+/* Fixiertes Ziel und unabhängiger Phantomarm. */
+.robot-stage.target-locked {
+    cursor: default;
 }
-
-/* Weniger Animationen respektieren. Nicht jeder braucht dein CSS-Feuerwerk. */
-@media(prefers-reduced-motion:reduce) {
-    *,*:before,*:after {
-        animation: none!important;
-        transition: none!important;
-    }
-
-}
-
-/* Unterer Bereich mit echter Spracherkennung. */
-.speech-test {
-    margin-top: 64px;
-    overflow: hidden;
-    border: 3px solid #f7c948;
-    border-radius: 14px;
-    background: #ffffff;
-}
-
-/* NICHT-AI-SLOP-Banner. Dezenter ging es nicht, du wolltest schließlich Drama. */
-.speech-test-heading {
-    padding: 32px 20px;
-    text-align: center;
+.robot-stage.target-locked .stage-label {
     color: #ffffff;
-    background: #111b29;
-    border-bottom: 8px solid #f7c948;
+    background: #354231;
+    padding: 5px 7px;
 }
-
-.speech-test-emojis {
-    font-size: clamp(20px, 4vw, 32px);
-    letter-spacing: 5px;
-    margin-bottom: 12px;
+.robot-stage.target-locked .target-marker circle {
+    stroke-dasharray: none;
 }
-
-.speech-test-heading h2 {
-    font-size: clamp(28px, 6vw, 56px);
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: #f7c948;
-}
-
-.speech-test-heading > p:last-child {
-    margin-top: 10px;
-}
-
-.speech-test-content {
-    padding: clamp(20px, 4vw, 36px);
-}
-
-.speech-test-content h3 {
-    margin: 0 0 12px;
-    font-size: 22px;
-}
-
-.speech-test-content p {
-    line-height: 1.7;
-}
-
-/* Start und Stop umbrechen lassen. Flexbox gibt nach, dein Dickkopf hoffentlich auch. */
-.recording-buttons {
-    display: flex;
+.robot-tools {
     flex-wrap: wrap;
-    gap: 12px;
-    margin: 24px 0 16px;
 }
-
-.recording-buttons button {
-    min-height: 48px;
-    padding: 12px 28px;
-    border: 0;
-    border-radius: 6px;
-    background: var(--blue);
-    color: #ffffff;
-    font-weight: 600;
-    cursor: pointer;
+.actual-arm path {
+    stroke: #a8c8f8;
+    stroke-dasharray: 9 5;
 }
-
-.recording-buttons #stopButton {
-    background: #b72b35;
-}
-
-.recording-buttons button:disabled {
-    background: #e7eef5;
-    color: #778a9d;
-    cursor: not-allowed;
-}
-
-.recording-buttons button:focus-visible {
-    outline: 3px solid var(--blue);
-    outline-offset: 4px;
-}
-
-.recording-status {
-    min-height: 28px;
-    margin-bottom: 20px;
-    color: var(--muted);
-}
-
-.speech-test-content label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-/* Transkriptfeld, in der Höhe vergrößerbar. */
-#log {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    border: 1px solid #bdcad8;
-    border-radius: 8px;
-    background: #f9fbfd;
-    color: var(--ink);
-    font: inherit;
-    line-height: 1.7;
-    resize: vertical;
-}
-
-#log:focus-visible {
-    outline: 2px solid var(--blue);
-    outline-offset: 3px;
-}
-
-.speech-test-note {
-    margin-top: 16px;
-    color: var(--muted);
-    font-size: 14px;
-}
-
-/* Sprachtest in der vergrößerten Ansicht ausblenden. */
-#focus-mode:checked ~ main .speech-test {
-    display: none;
+.actual-arm circle {
+    fill: #a8c8f8;
 }
