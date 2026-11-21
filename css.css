@@ -1172,3 +1172,65 @@ body.focus-mode #robotDrawing {
 .actual-arm circle {
     fill: #a8c8f8;
 }
+
+.manual-command {
+    margin: 12px 0;
+}
+.manual-command .primary-button {
+    width: 100%;
+}
+.manual-command p {
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+.api-log-panel {
+    margin-top: 22px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+}
+.api-log-panel summary {
+    padding: 18px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+#apiLogSummary {
+    margin-left: 12px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+}
+.api-log-content {
+    padding: 0 20px 20px;
+}
+.api-log-content p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+    margin-bottom: 16px;
+}
+.api-log-content label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+#apiLog {
+    display: block;
+    width: 100%;
+    min-height: 220px;
+    max-height: 70svh;
+    resize: vertical;
+    padding: 15px;
+    border: 1px solid #354356;
+    background: #141d29;
+    color: #d4e5fa;
+    font: 12px/1.7 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+body.focus-mode .api-log-panel {
+    display: none;
+}

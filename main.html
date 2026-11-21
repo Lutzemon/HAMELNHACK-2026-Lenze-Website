@@ -192,7 +192,11 @@
                                     <label for="log">Transkript</label>
                                     <span id="transcriptCount">0 Zeichen</span>
                                 </div>
-                                <textarea id="log" rows="7" readonly placeholder="Deine Worte erscheinen hier – schon während du sprichst."></textarea>
+                                <textarea id="log" rows="7" placeholder="Befehl eingeben oder Aufnahme starten …"></textarea>
+                                <div class="manual-command">
+                                    <button id="manualSendButton" class="primary-button" disabled>Text an API senden</button>
+                                    <p>Sendet den gesamten Feldinhalt. Auch mit Strg+Enter. Während der Aufnahme ist das Feld schreibgeschützt.</p>
+                                </div>
                                 <div class="transcript-actions">
                                     <button id="copyButton" class="text-button">Kopieren</button>
                                     <button id="downloadButton" class="text-button">Als Text laden</button>
@@ -207,12 +211,24 @@
                                         </div>
                                         <output id="streamCount">000</output>
                                     </div>
-                                    <p>Zwischenstände und endgültige Segmente sind für die Weiterverarbeitung verfügbar.</p>
+                                    <p>Die Command-API erhält nur endgültige Sprachsegmente oder den ausdrücklich gesendeten Eingabetext. Zwischenstände bleiben lokal sichtbar.</p>
                                 </div>
                                 <p class="privacy-note">Spracherkennung über den Browser; Audiodaten können an dessen Erkennungsdienst gesendet werden. Mikrofonzugriff benötigt HTTPS oder localhost.</p>
                             </div>
                         </section>
                     </div>
+                    <details id="apiLogPanel" class="api-log-panel" open>
+                        <summary>API-Log <span id="apiLogSummary" role="status">Noch keine Anfragen</span></summary>
+                        <div class="api-log-content">
+                            <p>Lokales Sitzungslog: Herkunft der Website, Zieladresse, JSON, Status und Antwort. „POST angefordert“ bestätigt noch keinen Eingang am Server; der Browser kann zuvor eine OPTIONS-Prüfung senden. Keys werden ausgeblendet. Eine HTTP-Bestätigung ist keine Bestätigung der Roboterbewegung.</p>
+                            <label for="apiLog">Anfragen und Antworten</label>
+                            <textarea id="apiLog" rows="12" readonly spellcheck="false" placeholder="API-Ereignisse erscheinen hier …"></textarea>
+                            <div class="button-row">
+                                <button id="copyApiLog" class="secondary-button">Log kopieren</button>
+                                <button id="clearApiLog" class="secondary-button">Log leeren</button>
+                            </div>
+                        </div>
+                    </details>
                     <div class="activity-bar">
                         <span id="workspaceName">LENZE / ROBOTER 01</span>
                         <span>KI-Übersetzung &amp; Backend in Vorbereitung</span>
@@ -242,14 +258,14 @@
                             <label for="robotName">Systemname</label>
                             <input id="robotName" maxlength="60" value="Lenze / Roboter 01">
                             <label for="apiUrl">Transkript-API (HTTP POST)</label>
-                            <input id="apiUrl" type="url" placeholder="https://euer-backend.de/transcripts">
+                            <input id="apiUrl" type="url" value="http://192.168.5.204:8000/command" placeholder="http://192.168.5.204:8000/command">
                             <label for="apiKey">API-Key (optional, nur für diese Sitzung)</label>
                             <input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Key später eintragen">
                             <label class="check-row">
-                                <input id="forwardApi" type="checkbox">
-                                <span>Transkript-Updates an die API senden</span>
+                                <input id="forwardApi" type="checkbox" checked>
+                                <span>Abgeschlossene Sprachsegmente an die Command-API senden</span>
                             </label>
-                            <p id="apiStatus" class="field-note" role="status">API noch nicht konfiguriert.</p>
+                            <p id="apiStatus" class="field-note" role="status">Command-API vorbereitet.</p>
                             <p class="field-note">Key wird nicht gespeichert. Dauerhafte Anbieter-Keys gehören ins Backend. Die API muss Browserzugriffe (CORS) und bei Key-Nutzung den Authorization-Header erlauben.</p>
                             <label for="endpoint">Roboter-WebSocket-Adresse</label>
                             <input id="endpoint" type="url" placeholder="ws://localhost:8080">
@@ -295,7 +311,7 @@
                     <details class="protocol-card">
                         <summary>API- und Stream-Schnittstelle / vorläufiges Format</summary>
                         <div class="protocol-content">
-                            <p>HTTP-API: Jedes Update wird als JSON mit <code>POST</code> an die konfigurierte Adresse gesendet, optional mit <code>Authorization: Bearer …</code>. Requests werden der Reihe nach verarbeitet. Bei Rückstau werden ältere Zwischenstände desselben Segments ersetzt; endgültige Segmente bleiben geordnet.</p>
+                            <p>Command-API: <code>POST http://192.168.5.204:8000/command</code> mit <code>{"inputType":"text","data":"Dein Befehl"}</code>. Nur endgültige Sprachsegmente und manuell gesendete Texte werden übertragen. Browser-Events behalten das unten gezeigte Stream-Format. Requests werden nacheinander verarbeitet.</p>
                             <p>Bei Netzwerkfehlern wird die API-Weiterleitung pausiert. Nicht bestätigte Nachrichten werden nicht automatisch wiederholt. Die API muss eine erfolgreiche Verarbeitung mit einem 2xx-Status bestätigen. Ein optionales Telemetrie-JSON in der Antwort aktualisiert den Phantomarm.</p>
                             <p>
                                 Im Browser:
@@ -329,7 +345,7 @@
                                 <code>window.motionInterface.updateTelemetry(message)</code>
                                 einspielen.
                             </p>
-                            <p>Das Protokoll wird an das Backend angepasst, sobald dessen Schnittstelle feststeht.</p>
+                            <p>API-Anfragen und Antworten stehen im Logfenster der Steuerungsansicht. Bei HTTPS-Seiten ist die HTTP-API durch Mixed Content blockiert; localhost oder einen HTTPS-Proxy verwenden.</p>
                         </div>
                     </details>
                 </section>
@@ -375,7 +391,7 @@
                                 <input id="sendInterim" type="checkbox" checked>
                                 <span>Auch Zwischenstände an den Stream ausgeben</span>
                             </label>
-                            <p>Das Transkript zeigt Zwischenstände immer an. Hier bestimmst du, ob auch die Schnittstelle sie erhält.</p>
+                            <p>Das Transkript zeigt Zwischenstände immer an. Dies betrifft Browser-Events und den optionalen WebSocket. Die Command-API erhält keine Zwischenstände.</p>
                             <label class="check-row">
                                 <input id="autoRestart" type="checkbox" checked>
                                 <span>Nach automatischem Browser-Stopp weiter aufnehmen</span>

@@ -5,8 +5,8 @@
     const defaults = {
         robotName: "Lenze / Roboter 01",
         endpoint: "",
-        apiUrl: "",
-        forwardApi: false,
+        apiUrl: "http://192.168.5.204:8000/command",
+        forwardApi: true,
         limitX: 500,
         limitY: 500,
         limitZ: 400,
@@ -29,6 +29,9 @@
     let apiRequest = null;
     let apiGeneration = 0;
     let apiDelivered = 0;
+    let apiRequestNumber = 0;
+    let manualPending = false;
+    const apiLogEntries = [];
     let socket = null;
     let connectionTimer = null;
     let streamSequence = 0;
@@ -65,6 +68,10 @@
             for (const key of Object.keys(defaults)) {
                 if (stored && Object.hasOwn(stored, key)) settings[key] = validateSetting(key, stored[key]);
             }
+            if (!stored || stored.commandApiVersion !== 1) {
+                settings.apiUrl = defaults.apiUrl;
+                settings.forwardApi = true;
+            }
         } catch {
             notice("Gespeicherte Einstellungen konnten nicht geladen werden. Standardwerte sind aktiv.");
         }
@@ -77,7 +84,7 @@
 
     function persistSettings() {
         try {
-            localStorage.setItem(storageKey, JSON.stringify(settings));
+            localStorage.setItem(storageKey, JSON.stringify({ ...settings, commandApiVersion: 1 }));
             notice("Einstellungen auf diesem Gerät gespeichert.");
         } catch {
             notice("Einstellungen gelten für diese Sitzung. Lokales Speichern ist nicht verfügbar.");
@@ -273,7 +280,7 @@
     }
     function updateStreamStatus() {
         const destinations = ["Browser-Events"];
-        if (settings.forwardApi && validApiUrl()) destinations.push("HTTP-API");
+        if (settings.forwardApi && validApiUrl()) destinations.push("Command-API · endgültiger Text");
         if (isConnected() && settings.forwardTranscript) destinations.push("WebSocket");
         byId("streamStatus").textContent = destinations.join(" + ");
         byId("apiStatus").textContent = !settings.apiUrl ? "API noch nicht konfiguriert." : settings.forwardApi && validApiUrl() ? `API aktiv · ${apiDelivered} bestätigt · ${apiQueue.length} warten` : "API-Weiterleitung pausiert.";
@@ -374,11 +381,61 @@
         }
     }
 
+    function addApiLog(level, event, details = {}, requestKey = "") {
+        const secrets = [byId("apiKey").value.trim(), requestKey].filter(Boolean);
+        let text = JSON.stringify(details, (key, value) => {
+            return /^(authorization|password|key|.*token|.*secret|.*api.?key)$/i.test(key) ? "[ausgeblendet]" : value;
+        }, 2);
+        for (const secret of secrets) text = text.split(secret).join("[ausgeblendet]");
+        text = text.replace(/Bearer\s+[^\s"\\]+/gi, "Bearer [ausgeblendet]");
+        const entry = `[${new Date().toLocaleTimeString("de-DE")}] ${level} · ${event}\n${text.slice(0, 12000)}`;
+        apiLogEntries.push(entry);
+        if (apiLogEntries.length > 100) apiLogEntries.shift();
+        byId("apiLog").value = apiLogEntries.join("\n\n");
+        byId("apiLog").scrollTop = byId("apiLog").scrollHeight;
+        byId("apiLogSummary").textContent = `${apiLogEntries.length} Einträge · zuletzt: ${event}`;
+        if (level === "FEHLER") byId("apiLogPanel").open = true;
+    }
+
+    function logUrl(address) {
+        try {
+            const url = new URL(address);
+            url.username = "";
+            url.password = "";
+            for (const key of [...url.searchParams.keys()]) url.searchParams.set(key, "[ausgeblendet]");
+            return url.href;
+        } catch {
+            return "Ungültige Adresse";
+        }
+    }
+
+    function browserRequestContext(address) {
+        const origin = location.origin || (location.protocol === "file:" ? "null" : "unbekannt");
+        const crossOrigin = new URL(address).origin !== origin;
+        return {
+            frontendOrigin: origin,
+            zielOrigin: new URL(address).origin,
+            browserVorpruefung: crossOrigin
+                ? "Browser prüft vor dem JSON-POST per OPTIONS (CORS). Bei Ablehnung wird der POST nicht gesendet."
+                : "Gleiche Herkunft: keine CORS-Vorabprüfung erforderlich.",
+            erwarteteFreigaben: crossOrigin ? {
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Methods": "POST",
+                "Access-Control-Allow-Headers": byId("apiKey").value.trim() ? "content-type, authorization" : "content-type"
+            } : null
+        };
+    }
+
     function cancelApiRequests() {
+        if (apiRequest || apiQueue.length) {
+            addApiLog("HINWEIS", "Versand abgebrochen", { offen: apiQueue.length, hinweis: "Bereits abgeschickte Befehle können vom Server trotzdem verarbeitet worden sein. Keine automatische Wiederholung." });
+        }
         apiGeneration++;
         apiQueue = [];
         if (apiRequest) apiRequest.abort();
         apiRequest = null;
+        manualPending = false;
+        updateRecordingUI();
     }
 
     function pauseApi(message) {
@@ -397,58 +454,89 @@
         const generation = apiGeneration;
         const controller = new AbortController();
         apiRequest = controller;
-        const timeout = setTimeout(() => controller.abort(), 10000);
+        let timedOut = false;
+        const started = Date.now();
+        const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 30000);
         updateStreamStatus();
+        const headers = { "Content-Type": "application/json" };
+        if (item.key) headers.Authorization = `Bearer ${item.key}`;
+        addApiLog("FETCH", `POST #${item.id} angefordert`, {
+            url: logUrl(item.url), quelle: item.manual ? "Texteingabe" : "Spracherkennung",
+            ...browserRequestContext(item.url), headers, body: JSON.parse(item.body),
+            hinweis: "Dies protokolliert den fetch-Aufruf, nicht den bestätigten Eingang des POST am Backend."
+        }, item.key);
         try {
-            const headers = { "Content-Type": "application/json" };
-            if (item.key) headers.Authorization = `Bearer ${item.key}`;
             const response = await fetch(item.url, {
-                method: "POST",
-                headers,
-                body: item.body,
-                signal: controller.signal,
-                credentials: "omit",
-                redirect: "error"
+                method: "POST", headers, body: item.body, signal: controller.signal,
+                credentials: "omit", redirect: "error"
             });
             if (generation !== apiGeneration) return;
+            const body = await response.text();
+            if (generation !== apiGeneration) return;
+            let data;
+            try { data = JSON.parse(body); } catch { data = null; }
+            addApiLog(response.ok ? "ANTWORT" : "FEHLER", `HTTP ${response.status} · #${item.id}`, {
+                url: logUrl(item.url), status: response.status, dauerMs: Date.now() - started,
+                contentType: response.headers.get("content-type"), antwort: data || body.slice(0, 6000)
+            }, item.key);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             apiDelivered++;
-            if (response.headers.get("content-type")?.includes("application/json")) {
-                const data = await response.json();
-                if (generation === apiGeneration && data?.type === "telemetry" && !updateTelemetry(data)) {
-                    notice("API bestätigt. Enthaltene Roboterkoordinaten waren jedoch ungültig.");
-                }
+            if (data?.type === "telemetry" && !updateTelemetry(data)) {
+                addApiLog("HINWEIS", "Ungültige Telemetrie", { request: item.id });
             }
+            notice(`Befehl #${item.id} von der API bestätigt (HTTP ${response.status}).`);
         } catch (error) {
             if (generation !== apiGeneration) return;
-            const detail = error.message?.startsWith("HTTP ") ? error.message : "Netzwerk, CORS, Antwort oder Zeitüberschreitung prüfen";
-            pauseApi(`API pausiert: ${detail}. Offene Nachrichten wurden nicht wiederholt.`);
+            const detail = error.message?.startsWith("HTTP ") ? error.message : timedOut
+                ? "Zeitüberschreitung nach 30 Sekunden; Verarbeitung am Server unbekannt"
+                : "Netzwerkfehler: Erreichbarkeit, CORS, Mixed Content oder Browser-Zugriff aufs lokale Netzwerk prüfen. Der Browser nennt keine eindeutige Ursache.";
+            addApiLog("FEHLER", `Request #${item.id} fehlgeschlagen`, {
+                url: logUrl(item.url), fehler: detail, browserMeldung: String(error.message || error.name),
+                dauerMs: Date.now() - started,
+                diagnose: error.message?.startsWith("HTTP ") ? "HTTP-Antwort im Log darüber prüfen."
+                    : "Server-Log prüfen: OPTIONS /command 400 deutet auf abgelehnte CORS-Freigaben hin. POST /command 400 erfordert den Antworttext des Endpunkts. Ohne lesbare Antwort kann JavaScript dies nicht unterscheiden."
+            }, item.key);
+            pauseApi(`API pausiert: ${detail}. Keine automatische Wiederholung.`);
         } finally {
             clearTimeout(timeout);
             if (generation === apiGeneration) {
                 apiRequest = null;
+                if (item.manual) manualPending = false;
+                updateRecordingUI();
                 updateStreamStatus();
                 void pumpApi();
             }
         }
     }
 
-    function enqueueApi(message) {
-        if (!settings.forwardApi) return;
-        const url = validApiUrl();
-        if (!url) return pauseApi("API pausiert: Gültige HTTP(S)-Adresse erforderlich.");
-        if (message.type === "transcript") {
-            apiQueue = apiQueue.filter((item) => item.segmentId !== message.segmentId || item.isFinal);
+    function enqueueApi(message, manual = false) {
+        if (message.type !== "transcript" || !message.isFinal || !message.text.trim()) return false;
+        if (!settings.forwardApi) {
+            addApiLog("HINWEIS", "Nicht gesendet: API pausiert", { quelle: manual ? "Texteingabe" : "Spracherkennung" });
+            return false;
         }
-        if (apiQueue.length >= 100) return pauseApi("API pausiert: Zu viele offene Nachrichten. Backend-Verarbeitung prüfen.");
-        apiQueue.push({
-            url: url.href,
-            key: byId("apiKey").value.trim(),
-            body: JSON.stringify(message),
-            segmentId: message.segmentId,
-            isFinal: message.isFinal
-        });
+        const url = validApiUrl();
+        if (!url) {
+            const reason = location.protocol === "https:" && settings.apiUrl.startsWith("http:")
+                ? "Mixed Content: HTTPS-Seite darf die HTTP-API nicht aufrufen. Website über localhost öffnen oder API per HTTPS-Proxy bereitstellen."
+                : "Gültige HTTP(S)-API-Adresse ohne Zugangsdaten erforderlich.";
+            addApiLog("FEHLER", "Versand blockiert", { url: logUrl(settings.apiUrl), grund: reason });
+            pauseApi(reason);
+            return false;
+        }
+        if (apiQueue.length >= 100) {
+            addApiLog("FEHLER", "Warteschlange voll", { offen: apiQueue.length });
+            pauseApi("API pausiert: Zu viele offene Nachrichten.");
+            return false;
+        }
+        const item = {
+            id: ++apiRequestNumber, url: url.href, key: byId("apiKey").value.trim(), manual,
+            body: JSON.stringify({ inputType: "text", data: message.text.trim() })
+        };
+        apiQueue.push(item);
+        addApiLog("QUEUE", `Befehl #${item.id} vorgemerkt`, { url: logUrl(item.url), body: JSON.parse(item.body), offen: apiQueue.length });
         void pumpApi();
+        return true;
     }
 
     byId("apiKey").addEventListener("input", () => {
@@ -475,12 +563,16 @@
         byId("log").value = text;
         byId("log").scrollTop = byId("log").scrollHeight;
         byId("transcriptCount").textContent = `${text.length} Zeichen`;
+        updateRecordingUI();
     }
     function updateRecordingUI(status) {
         const busy = phase !== "idle" || wantsRecording;
         byId("startButton").disabled = !recognition || busy;
         byId("stopButton").disabled = !busy || phase === "stopping";
         byId("clearButton").disabled = busy;
+        byId("log").readOnly = busy;
+        byId("manualSendButton").disabled = busy || manualPending || !visibleText.trim();
+        byId("manualSendButton").textContent = manualPending ? "Wird gesendet …" : "Text an API senden";
         byId("language").disabled = busy;
         document.body.classList.toggle("recording", phase === "recording");
         byId("recordingBadge").textContent = phase === "recording" ? "AUFNAHME" : busy ? "WARTE" : "BEREIT";
@@ -601,6 +693,49 @@
         };
     }
 
+    byId("log").addEventListener("input", () => {
+        if (phase !== "idle" || wantsRecording) return;
+        confirmedText = byId("log").value;
+        visibleText = confirmedText;
+        byId("transcriptCount").textContent = `${visibleText.length} Zeichen`;
+        updateRecordingUI();
+    });
+    function sendManualCommand() {
+        if (phase !== "idle" || wantsRecording || manualPending || !visibleText.trim()) return;
+        if (!settings.forwardApi) {
+            settings.forwardApi = true;
+            byId("forwardApi").checked = true;
+            persistSettings();
+            updateStreamStatus();
+            addApiLog("HINWEIS", "API für manuellen Versand aktiviert");
+        }
+        manualPending = true;
+        if (!enqueueApi({ type: "transcript", text: visibleText, isFinal: true }, true)) manualPending = false;
+        updateRecordingUI();
+    }
+    byId("manualSendButton").addEventListener("click", sendManualCommand);
+    byId("log").addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            sendManualCommand();
+        }
+    });
+    byId("clearApiLog").addEventListener("click", () => {
+        apiLogEntries.length = 0;
+        byId("apiLog").value = "";
+        byId("apiLogSummary").textContent = "Log geleert.";
+    });
+    byId("copyApiLog").addEventListener("click", async () => {
+        try {
+            await navigator.clipboard.writeText(byId("apiLog").value);
+            notice("API-Log kopiert.");
+        } catch {
+            byId("apiLog").focus();
+            byId("apiLog").select();
+            notice("Log ausgewählt. Mit Strg+C kopieren.");
+        }
+    });
+
     byId("clearButton").addEventListener("click", () => {
         if (phase !== "idle" || wantsRecording) return;
         confirmedText = "";
@@ -655,6 +790,7 @@
         getTarget: () => ({ type: "target", position: { ...target }, gripper, units: "mm" })
     };
     loadSettings();
+    addApiLog("BEREIT", "Command-API initialisiert", { url: logUrl(settings.apiUrl), aktiv: settings.forwardApi, format: { inputType: "text", data: "…" } });
     setTargetLocked(false);
     updateConnection("Nicht verbunden. Text bleibt lokal verfügbar.");
     updateRecordingUI(recognition ? "Bereit für deine Aufnahme." : "Dieser Browser unterstützt keine Spracherkennung. Bitte Chrome oder Edge ausprobieren.");
