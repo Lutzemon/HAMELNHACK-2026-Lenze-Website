@@ -70,7 +70,7 @@
                         <section class="robot-panel" aria-labelledby="robot-heading">
                             <div class="panel-header">
                                 <h2 id="robot-heading">
-                                    Arbeitsraum
+                                    Linearroboter
                                     <span class="tag">XY / VORSCHAU</span>
                                 </h2>
                                 <button id="focusButton" class="text-button" aria-pressed="false">Ansicht vergrößern ⛶</button>
@@ -81,46 +81,47 @@
                                     <span id="stageHint">Maus bewegen · Klick oder Tippen fixiert</span>
                                 </div>
                                 <svg id="robotDrawing" viewBox="0 0 800 500" role="img" aria-labelledby="robot-title">
-                                    <title id="robot-title">Interaktive schematische Roboterarm-Vorschau</title>
+                                    <title id="robot-title">Zweiachsiger Linearroboter: X rechts/links, Y hoch/runter</title>
                                     <defs>
                                         <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                                             <path d="M40 0H0V40" fill="none" stroke="currentColor" stroke-width="0.7"/>
                                         </pattern>
                                     </defs>
                                     <rect class="grid-layer" width="800" height="500" fill="url(#grid)"/>
-                                    <circle class="reach-ring" cx="170" cy="420" r="300"/>
-                                    <circle class="reach-ring" cx="170" cy="420" r="440"/>
-                                    <path class="base-line" d="M75 448H265M170 420V450"/>
-
-                                    <!-- Der transparente Arm erscheint erst bei gültiger Telemetrie. -->
-                                    <g id="actualArm" class="actual-arm" visibility="hidden">
-                                        <path id="actualPath"/>
-                                        <circle id="actualJoint" r="21"/>
-                                        <circle id="actualTip" r="12"/>
+                                    <!-- Fester Rahmen und zwei Motoren, schematisch nach dem Foto. -->
+                                    <g class="machine-frame">
+                                        <path d="M70 420V80H730V420M70 420H730"/>
+                                        <rect class="horizontal-rail" x="90" y="91" width="620" height="27" rx="3"/>
+                                        <path class="belt-line" d="M95 104H705"/>
+                                        <rect class="motor" x="45" y="78" width="45" height="52" rx="5"/>
+                                        <rect class="motor" x="710" y="78" width="45" height="52" rx="5"/>
+                                        <circle class="motor-hub" cx="67" cy="104" r="9"/>
+                                        <circle class="motor-hub" cx="732" cy="104" r="9"/>
+                                        <text x="45" y="66">MOTOR 01</text>
+                                        <text x="690" y="66">MOTOR 02</text>
                                     </g>
-                                    <g class="virtual-arm">
-                                        <path id="armShadow" class="arm-shadow"/>
-                                        <path id="armPath"/>
-                                        <circle class="base-joint" cx="170" cy="420" r="27"/>
-                                        <circle id="armJoint" r="24"/>
-                                        <circle id="armTip" r="14"/>
+                                    <!-- Ist-Position wird ausschließlich aus Roboterkoordinaten gezeichnet. -->
+                                    <g id="actualArm" class="actual-carriage" visibility="hidden">
+                                        <g id="actualRail"><rect class="vertical-rail" x="-9" y="118" width="18" height="290"/><rect class="cross-slide" x="-23" y="92" width="46" height="30" rx="3"/></g>
+                                        <g id="actualCarriage"><rect class="tool-slide" x="-20" y="-16" width="40" height="32" rx="4"/><path class="tool-tip" d="M0 16V33"/><circle r="5"/></g>
                                     </g>
-                                    <g id="targetMarker" class="target-marker">
-                                        <circle r="31"/>
-                                        <path d="M-42 0H-22M22 0H42M0-42V-22M0 22V42"/>
-                                        <path id="gripperDrawing" d="M-10-8V9L-5 15M10-8V9L5 15"/>
+                                    <g class="target-machine">
+                                        <g id="targetRail"><rect class="vertical-rail" x="-9" y="118" width="18" height="290"/><rect class="cross-slide" x="-23" y="92" width="46" height="30" rx="3"/></g>
+                                        <g id="targetCarriage"><rect class="tool-slide" x="-20" y="-16" width="40" height="32" rx="4"/><path class="tool-tip" d="M0 16V33"/><circle r="5"/></g>
                                     </g>
-                                    <text class="axis-label" x="27" y="470">Y ↑</text>
-                                    <text class="axis-label" x="725" y="470">X →</text>
+                                    <g id="targetMarker" class="target-marker"><circle r="31"/><path d="M-42 0H-22M22 0H42M0-42V-22M0 22V42"/></g>
+                                    <text class="axis-label" x="90" y="450">0 / 0</text>
+                                    <text class="axis-label" x="25" y="250" transform="rotate(-90 25 250)">Y · HOCH / RUNTER</text>
+                                    <text class="axis-label" x="525" y="450">X · LINKS / RECHTS</text>
                                 </svg>
                                 <div class="stage-bottom">
                                     <span>
                                         <i class="swatch target-swatch"></i>
-                                        Zielarm
+                                        Zielposition
                                     </span>
                                     <span>
                                         <i class="swatch actual-swatch"></i>
-                                        Phantom / Ist-Arm
+                                        Ist-Position
                                         <b id="telemetryLabel">· keine Daten</b>
                                     </span>
                                     <span class="stage-scale">SCHEMATISCHE ANSICHT</span>
@@ -138,24 +139,12 @@
                                             Y
                                             <output id="coordY">125</output>
                                         </span>
-                                        <span>
-                                            Z
-                                            <output id="coordZ">180</output>
-                                        </span>
                                         <small id="unitLabel">mm</small>
                                     </div>
                                 </div>
-                                <button id="gripperButton" class="gripper-button" aria-pressed="false">
-                                    Greifer
-                                    <b id="gripperState">offen</b>
-                                </button>
+                                <div class="actual-readout"><span class="eyebrow">IST-POSITION</span><output id="actualPosition">Keine Telemetrie</output></div>
                             </div>
                             <div class="robot-tools">
-                                <label for="heightControl">
-                                    Höhe Z
-                                    <span>mm</span>
-                                </label>
-                                <input id="heightControl" type="range" min="0" max="400" value="180">
                                 <button id="unlockTargetButton" class="secondary-button" disabled>Ziel bearbeiten</button>
                                 <button id="homeButton" class="secondary-button">Ziel zurücksetzen</button>
                                 <button id="sendTargetButton" class="primary-button" disabled>Ziel übertragen</button>
@@ -278,24 +267,20 @@
                                 <input id="forwardTranscript" type="checkbox">
                                 <span>Transkripte zusätzlich über WebSocket senden</span>
                             </label>
-                            <p class="field-note">Keine automatische Bewegung aus Sprache. Ziele werden nur über „Ziel übertragen“ gesendet.</p>
+                            <p class="field-note">Sprachbefehle gehen bei aktiver Weiterleitung an die Command-API. XY-Ziele werden separat über „Ziel übertragen“ per WebSocket gesendet.</p>
                         </section>
                         <section class="card">
                             <p class="eyebrow">KOORDINATEN</p>
                             <h2>Arbeitsraum</h2>
-                            <p>Vorschaugrenzen und übertragene Ziele in Millimetern.</p>
+                            <p>Zwei lineare Achsen: X rechts/links, Y hoch/runter. 500 mm sind Platzhalter; die tatsächlichen Verfahrwege hier eintragen.</p>
                             <div class="field-grid">
                                 <div>
-                                    <label for="limitX">X maximal</label>
+                                    <label for="limitX">X · rechts/links (mm)</label>
                                     <input id="limitX" type="number" min="1" max="10000" value="500" required>
                                 </div>
                                 <div>
-                                    <label for="limitY">Y maximal</label>
+                                    <label for="limitY">Y · hoch/runter (mm)</label>
                                     <input id="limitY" type="number" min="1" max="10000" value="500" required>
-                                </div>
-                                <div>
-                                    <label for="limitZ">Z maximal</label>
-                                    <input id="limitZ" type="number" min="1" max="10000" value="400" required>
                                 </div>
                             </div>
                             <label for="language">Erkennungssprache</label>
@@ -312,7 +297,7 @@
                         <summary>API- und Stream-Schnittstelle / vorläufiges Format</summary>
                         <div class="protocol-content">
                             <p>Command-API: <code>POST http://192.168.5.204:8000/command</code> mit <code>{"inputType":"text","data":"Dein Befehl"}</code>. Nur endgültige Sprachsegmente und manuell gesendete Texte werden übertragen. Browser-Events behalten das unten gezeigte Stream-Format. Requests werden nacheinander verarbeitet.</p>
-                            <p>Bei Netzwerkfehlern wird die API-Weiterleitung pausiert. Nicht bestätigte Nachrichten werden nicht automatisch wiederholt. Die API muss eine erfolgreiche Verarbeitung mit einem 2xx-Status bestätigen. Ein optionales Telemetrie-JSON in der Antwort aktualisiert den Phantomarm.</p>
+                            <p>Bei Netzwerkfehlern wird die API-Weiterleitung pausiert. Nicht bestätigte Nachrichten werden nicht automatisch wiederholt. Die API muss eine erfolgreiche Verarbeitung mit einem 2xx-Status bestätigen. Ein optionales Telemetrie-JSON in der Antwort aktualisiert den Phantomschlitten.</p>
                             <p>
                                 Im Browser:
                                 <code>window.addEventListener("transcript:update", event =&gt; console.log(event.detail))</code>
@@ -336,11 +321,11 @@
                             </p>
                             <p>
                                 Zielausgabe:
-                                <code>{"type":"target","position":{"x":240,"y":125,"z":180},"gripper":"open","units":"mm"}</code>
+                                <code>{"type":"target","position":{"x":240,"y":125},"units":"mm"}</code>
                             </p>
                             <p>
                                 Ist-Position empfangen:
-                                <code>{"type":"telemetry","position":{"x":230,"y":120,"z":175},"units":"mm"}</code>
+                                <code>{"type":"telemetry","position":{"x":230,"y":120},"units":"mm"}</code>
                                 . Ohne WebSocket kann ein Adapter dieselben Daten über
                                 <code>window.motionInterface.updateTelemetry(message)</code>
                                 einspielen.
@@ -374,9 +359,9 @@
                             </label>
                             <label class="check-row">
                                 <input id="showActual" type="checkbox" checked>
-                                <span>Phantomarm bei verfügbarer Telemetrie anzeigen</span>
+                                <span>Phantomschlitten bei verfügbarer Telemetrie anzeigen</span>
                             </label>
-                            <label for="actualOpacity">Deckkraft des Phantomarms</label>
+                            <label for="actualOpacity">Deckkraft des Phantomschlittens</label>
                             <input id="actualOpacity" type="range" min="10" max="80" value="30">
                             <label for="units">Anzeigeeinheit</label>
                             <select id="units">

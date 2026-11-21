@@ -9,7 +9,6 @@
         forwardApi: true,
         limitX: 500,
         limitY: 500,
-        limitZ: 400,
         language: "de-DE",
         forwardTranscript: false,
         showGrid: true,
@@ -21,9 +20,8 @@
     };
     const storageKey = "lenze-motion-settings-v2";
     let settings = { ...defaults };
-    let target = { x: 240, y: 125, z: 180 };
+    let target = { x: 240, y: 125 };
     let telemetry = null;
-    let gripper = "open";
     let targetLocked = false;
     let apiQueue = [];
     let apiRequest = null;
@@ -53,7 +51,7 @@
 
     function validateSetting(key, value) {
         if (typeof defaults[key] === "boolean") return typeof value === "boolean" ? value : defaults[key];
-        if (["limitX", "limitY", "limitZ"].includes(key)) {
+        if (["limitX", "limitY"].includes(key)) {
             return Number.isFinite(Number(value)) && Number(value) >= 1 && Number(value) <= 10000 ? Number(value) : defaults[key];
         }
         if (key === "actualOpacity") return Math.max(10, Math.min(80, Number(value) || 30));
@@ -97,9 +95,6 @@
         byId("actualArm").style.opacity = settings.actualOpacity / 100;
         target.x = Math.max(0, Math.min(settings.limitX, target.x));
         target.y = Math.max(0, Math.min(settings.limitY, target.y));
-        target.z = Math.max(0, Math.min(settings.limitZ, target.z));
-        byId("heightControl").max = settings.limitZ;
-        byId("heightControl").value = target.z;
         renderRobot();
         updateStreamStatus();
     }
@@ -153,61 +148,49 @@
         if (event.key === "Escape") toggleFocus(false);
     });
 
-    function armGeometry(position) {
-        const x = 90 + position.x / settings.limitX * 620;
-        const y = 390 - position.y / settings.limitY * 280;
-        const dx = x - 170;
-        const dy = y - 420;
-        const distance = Math.max(31, Math.min(629, Math.hypot(dx, dy)));
-        const angle = Math.atan2(dy, dx) - Math.acos(Math.max(-1, Math.min(1, (330 ** 2 + distance ** 2 - 300 ** 2) / (2 * 330 * distance))));
-        const jointX = 170 + Math.cos(angle) * 330;
-        const jointY = 420 + Math.sin(angle) * 330;
-        return { x, y, jointX, jointY, path: `M170 420 L${jointX} ${jointY} L${x} ${y}` };
+    function projectPosition(position) {
+        return { x: 90 + position.x / settings.limitX * 620, y: 390 - position.y / settings.limitY * 280 };
+    }
+
+    function positionInBounds(position) {
+        return position && ["x", "y"].every((key) => typeof position[key] === "number" && Number.isFinite(position[key]) && position[key] >= 0 && position[key] <= settings[`limit${key.toUpperCase()}`]);
     }
 
     function renderRobot() {
-        const arm = armGeometry(target);
-        byId("armPath").setAttribute("d", arm.path);
-        byId("armShadow").setAttribute("d", arm.path);
-        for (const [id, x, y] of [["armJoint", arm.jointX, arm.jointY], ["armTip", arm.x, arm.y]]) {
-            byId(id).setAttribute("cx", x);
-            byId(id).setAttribute("cy", y);
-        }
-        byId("targetMarker").setAttribute("transform", `translate(${arm.x} ${arm.y})`);
-        byId("gripperDrawing").setAttribute("d", gripper === "open" ? "M-10-8V9L-5 15M10-8V9L5 15" : "M-5-8V9L0 15M5-8V9L0 15");
+        const point = projectPosition(target);
+        byId("targetRail").setAttribute("transform", `translate(${point.x} 0)`);
+        byId("targetCarriage").setAttribute("transform", `translate(${point.x} ${point.y})`);
+        byId("targetMarker").setAttribute("transform", `translate(${point.x} ${point.y})`);
         const factor = settings.units === "cm" ? 10 : 1;
-        for (const axis of ["x", "y", "z"]) byId(`coord${axis.toUpperCase()}`).textContent = String(Math.round(target[axis] / factor * 10) / 10);
+        const format = (value) => String(Math.round(value / factor * 10) / 10);
+        for (const axis of ["x", "y"]) byId(`coord${axis.toUpperCase()}`).textContent = format(target[axis]);
         byId("unitLabel").textContent = settings.units;
-        byId("gripperState").textContent = gripper === "open" ? "offen" : "geschlossen";
-        byId("gripperButton").setAttribute("aria-pressed", String(gripper === "closed"));
-        const showTelemetry = settings.showActual && telemetry !== null;
-        byId("actualArm").setAttribute("visibility", showTelemetry ? "visible" : "hidden");
-        if (showTelemetry) {
-            const actual = armGeometry(telemetry.position);
-            byId("actualPath").setAttribute("d", actual.path);
-            byId("actualJoint").setAttribute("cx", actual.jointX);
-            byId("actualJoint").setAttribute("cy", actual.jointY);
-            byId("actualTip").setAttribute("cx", actual.x);
-            byId("actualTip").setAttribute("cy", actual.y);
+        const validTelemetry = telemetry && positionInBounds(telemetry.position);
+        byId("actualArm").setAttribute("visibility", settings.showActual && validTelemetry ? "visible" : "hidden");
+        byId("actualPosition").textContent = validTelemetry
+            ? `X ${format(telemetry.position.x)} / Y ${format(telemetry.position.y)} ${settings.units}`
+            : telemetry ? "Außerhalb der Vorschaugrenzen" : "Keine Telemetrie";
+        if (validTelemetry) {
+            const actual = projectPosition(telemetry.position);
+            byId("actualRail").setAttribute("transform", `translate(${actual.x} 0)`);
+            byId("actualCarriage").setAttribute("transform", `translate(${actual.x} ${actual.y})`);
         }
     }
 
     function setTargetLocked(locked) {
         targetLocked = locked;
         byId("targetMode").textContent = locked ? "ZIEL FIXIERT" : "ZIEL WÄHLEN";
-        byId("stageHint").textContent = locked ? "Phantomarm folgt den Roboterkoordinaten" : "Maus bewegen · Klick oder Tippen fixiert";
+        byId("stageHint").textContent = locked ? "Ist-Position folgt den Roboterkoordinaten" : "Maus bewegen · Klick oder Tippen fixiert";
         byId("robotStage").classList.toggle("target-locked", locked);
         byId("unlockTargetButton").disabled = !locked;
-        byId("heightControl").disabled = locked;
-        byId("gripperButton").disabled = locked;
     }
 
     function updateTelemetry(message) {
         if (!message || message.type !== "telemetry" || message.units !== "mm") return false;
         const position = message.position;
-        if (!position || !["x", "y", "z"].every((key) => typeof position[key] === "number" && Number.isFinite(position[key]) && position[key] >= 0 && position[key] <= settings[`limit${key.toUpperCase()}`])) return false;
-        telemetry = { position: { x: position.x, y: position.y, z: position.z } };
-        byId("telemetryLabel").textContent = `· ${new Date().toLocaleTimeString("de-DE")} / Z ${position.z} mm`;
+        if (!positionInBounds(position)) return false;
+        telemetry = { position: { x: position.x, y: position.y } };
+        byId("telemetryLabel").textContent = `· ${new Date().toLocaleTimeString("de-DE")}`;
         renderRobot();
         return true;
     }
@@ -244,21 +227,10 @@
         target.y = Math.max(0, Math.min(settings.limitY, target.y + moves[event.key][1]));
         renderRobot();
     });
-    byId("heightControl").addEventListener("input", () => {
-        if (targetLocked) return;
-        target.z = Number(byId("heightControl").value);
-        renderRobot();
-    });
     byId("homeButton").addEventListener("click", () => {
         setTargetLocked(false);
-        target = { x: settings.limitX / 2, y: settings.limitY / 2, z: settings.limitZ / 2 };
-        gripper = "open";
+        target = { x: settings.limitX / 2, y: settings.limitY / 2 };
         applySettings();
-    });
-    byId("gripperButton").addEventListener("click", () => {
-        if (targetLocked) return;
-        gripper = gripper === "open" ? "closed" : "open";
-        renderRobot();
     });
 
     function isConnected() {
@@ -363,7 +335,7 @@
     });
     byId("disconnectButton").addEventListener("click", disconnect);
     byId("sendTargetButton").addEventListener("click", () => {
-        const message = { type: "target", position: { ...target }, gripper, units: "mm" };
+        const message = { type: "target", position: { ...target }, units: "mm" };
         if (sendMessage(message)) {
             window.dispatchEvent(new CustomEvent("robot:target", { detail: message }));
             byId("targetStatus").textContent = "Ziel ans Backend gesendet. Ausführung nicht bestätigt.";
@@ -787,7 +759,7 @@
     window.motionInterface = {
         updateTelemetry,
         getTranscript: () => visibleText,
-        getTarget: () => ({ type: "target", position: { ...target }, gripper, units: "mm" })
+        getTarget: () => ({ type: "target", position: { ...target }, units: "mm" })
     };
     loadSettings();
     addApiLog("BEREIT", "Command-API initialisiert", { url: logUrl(settings.apiUrl), aktiv: settings.forwardApi, format: { inputType: "text", data: "…" } });
