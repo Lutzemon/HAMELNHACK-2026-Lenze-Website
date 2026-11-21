@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+
+<html lang="de">
+    <head>
+
+        <meta charset="UTF-8">
+
+        <!-- Layout an die Gerätebreite anpassen. Dein Handy ist kein verdammter 32-Zoll-Monitor. -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <meta name="theme-color" content="#111b29">
+        <title>Lenze Motion Lab · HamelnHack 2026</title>
+
+        <link rel="stylesheet" href="css.css">
+
+        <!-- Skript erst nach dem HTML laden. Erst die Bühne, dann dein Fehlerfestival. -->
+        <script src="webSpeechAPI.js" defer></script>
+    </head>
+    <body>
+
+        <!-- Radio-Inputs steuern die Tabs per CSS. Ja, du JavaScript-Junkie, das geht auch ohne Skript. -->
+        <input class="state-input" type="radio" name="page" id="control-tab" checked>
+        <input class="state-input" type="radio" name="page" id="setup-tab">
+        <input class="state-input" type="radio" name="page" id="settings-tab">
+
+        <!-- Schalter für die vergrößerte Ansicht. Jetzt sieht man das Chaos wenigstens größer. -->
+        <input class="state-input" type="checkbox" id="focus-mode">
+
+        <!-- Logo und Navigation. -->
+        <header class="topbar">
+
+            <a class="brand" href="main.html" aria-label="Lenze Motion Lab Startseite">
+                <span class="brand-symbol">
+                    L
+                    <span>↗</span>
+                </span>
+                <span>
+                    lenze
+                    <span class="brand-sub">MOTION LAB</span>
+                </span>
+            </a>
+
+            <!-- for verbindet die Tab-Labels mit den Radio-Inputs. -->
+            <nav aria-label="Hauptnavigation">
+                <label for="control-tab">Steuerung</label>
+                <label for="setup-tab">Setup</label>
+                <label for="settings-tab">Einstellungen</label>
+            </nav>
+            <span class="event">
+                HAMELNHACK
+                <b>2026</b>
+            </span>
+        </header>
+
+        <main>
+
+            <!-- Steuerungs-Prototyp. -->
+            <section class="page control-page" aria-labelledby="control-heading">
+
+                <div class="page-heading">
+                    <div>
+                        <p class="eyebrow">MENSCH. SPRACHE. BEWEGUNG.</p>
+                        <h1 id="control-heading">Deine Idee bewegt.</h1>
+                        <p>Sprich mit dem Roboter. Oder nimm die Steuerung selbst in die Hand.</p>
+                    </div>
+                    <span class="demo-tag">
+                        <span></span>
+                        Prototyp · Simulationsansicht
+                    </span>
+                </div>
+
+                <!-- Am PC nebeneinander, am Handy untereinander. Sogar die Karten kriegen ihre Aufstellung hin. -->
+                <div class="workspace">
+
+                    <section class="robot-panel" aria-labelledby="workspace-heading">
+
+                        <div class="panel-top">
+                            <div>
+                                <span class="live-dot"></span>
+                                <h2 id="workspace-heading">Arbeitsraum</h2>
+                                <span class="small-label">3D-VORSCHAU</span>
+                            </div>
+
+                            <!-- Schaltet die vergrößerte Ansicht um. -->
+                            <label class="icon-button focus-button" for="focus-mode">
+                                <span class="expand-icon">⛶</span>
+                                <span class="focus-open">Ansicht vergrößern</span>
+                                <span class="focus-close">Ansicht schließen</span>
+                            </label>
+                        </div>
+
+                        <!-- Nur Vorschau: Der Greifer-Mauszeiger kommt aus CSS. -->
+                        <div class="robot-stage" tabindex="0" aria-label="Illustrativer Roboterarbeitsraum. Am Computer erscheint ein Greifer als Mauszeiger. Keine echte Robotersteuerung.">
+                            <div class="stage-meta">
+                                <span class="stage-label">MANUELLER MODUS</span>
+                                <span class="stage-note">Greifer mit der Maus positionieren</span>
+                            </div>
+
+                            <div class="stage-grid"></div>
+
+                            <!-- Statische SVG-Zeichnung. Der Arm bewegt sich so viel wie dein Code ohne Debugging. -->
+                            <svg class="robot-illustration" viewBox="0 0 800 560" role="img" aria-labelledby="robot-title">
+                                <title id="robot-title">Virtueller Roboterarm mit transparenter Vorschau des echten Arms</title>
+
+                                <!-- Farbverläufe und Schatten für die Zeichnung. -->
+                                <defs>
+
+                                    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+                                        <stop stop-color="#fafcff"/>
+                                        <stop offset=".48" stop-color="#c6d2df"/>
+                                        <stop offset="1" stop-color="#71849b"/>
+                                    </linearGradient>
+
+                                    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+                                        <stop stop-color="#53afff"/>
+                                        <stop offset="1" stop-color="#0061b7"/>
+                                    </linearGradient>
+
+                                    <filter id="shadow">
+                                        <feGaussianBlur stdDeviation="14"/>
+                                    </filter>
+                                </defs>
+
+                                <ellipse cx="379" cy="463" rx="170" ry="23" fill="#020912" opacity=".7" filter="url(#shadow)"/>
+
+                                <!-- Transparente Ist-Arm-Vorschau ohne Live-Daten. Der Geist deines funktionierenden Roboters. -->
+                                <g class="ghost-arm" fill="none" stroke="#9bc4e6" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M366 431V342L268 245L376 153L472 195"/>
+                                    <circle cx="268" cy="245" r="22"/>
+                                    <circle cx="376" cy="153" r="17"/>
+                                    <path d="M472 195l23 8m-5-14 20 11-8 20" stroke-width="9"/>
+                                </g>
+
+                                <!-- Virtueller Arm mit Gelenken und Greifer. -->
+                                <g stroke="#263d54" stroke-width="2">
+                                    <path d="M291 435l67-25 88 25-64 30z" fill="#6d7f93"/>
+                                    <path d="M291 435v17l91 31v-18z" fill="#364a60"/>
+                                    <path d="M382 465l64-30v17l-64 31z" fill="#26394c"/>
+                                    <path d="M330 433v-55h72v55q-36 21-72 0" fill="url(#metal)"/>
+                                    <ellipse cx="366" cy="378" rx="36" ry="14" fill="url(#blue)"/>
+                                    <path d="M342 378l-55-120 39-20 62 132z" fill="url(#metal)"/>
+                                    <path d="M351 369l-50-111 9-4 53 111z" fill="#f7fafc" opacity=".7"/>
+                                    <circle cx="307" cy="247" r="34" fill="url(#blue)"/>
+                                    <circle cx="307" cy="247" r="20" fill="#153b61"/>
+                                    <circle cx="307" cy="247" r="11" fill="#8bb7de"/>
+                                    <path d="M309 214l124-74 22 34-128 96 10-28z" fill="url(#metal)"/>
+                                    <path d="M335 225l98-58" fill="none" stroke="#eef5fc" stroke-width="10"/>
+                                    <circle cx="443" cy="156" r="27" fill="url(#blue)"/>
+                                    <circle cx="443" cy="156" r="13" fill="#163f67"/>
+                                    <path d="M464 149l61 34-13 28-63-32z" fill="url(#metal)"/>
+                                    <path d="M514 179l19 10-15 30-18-9z" fill="url(#blue)"/>
+                                    <path d="M530 196l17 9" stroke="#d7e3ed" stroke-width="13"/>
+                                    <path d="M547 198l20 11-10 20m-16-19 8 16-11 10" fill="none" stroke="#b8f36c" stroke-width="8" stroke-linejoin="round"/>
+                                </g>
+
+                                <g stroke="#b8f36c" fill="none" opacity=".8">
+                                    <circle cx="551" cy="215" r="43" stroke-dasharray="3 8"/>
+                                    <path d="M551 161v13m0 82v13m-54-54h13m82 0h13"/>
+                                </g>
+                                <path d="M583 196l45-32h70" stroke="#71889f" fill="none"/>
+                                <text x="632" y="153" fill="#b8f36c" font-size="13" font-family="sans-serif">ZIELPOSITION</text>
+                            </svg>
+
+                            <div class="axis" aria-label="Koordinatenachsen">
+                                <span class="axis-z">Z</span>
+                                <span class="axis-y">Y</span>
+                                <span class="axis-x">X</span>
+                                <i></i>
+                            </div>
+
+                            <div class="stage-legend">
+                                <span>
+                                    <i class="legend-target"></i>
+                                    Virtueller Arm
+                                </span>
+                                <span>
+                                    <i class="legend-actual"></i>
+                                    Echter Arm · Vorschau
+                                </span>
+                            </div>
+
+                            <div class="touch-hint">Am Handy: Vorschau des Arbeitsraums</div>
+                        </div>
+
+                        <!-- Feste Beispielkoordinaten. Die Zahlen sind ausgedacht, genau wie dein Optimismus beim ersten Start. -->
+                        <div class="coordinates">
+                            <div>
+                                <span class="eyebrow">
+                                    ZIELPOSITION
+                                    <small>BEISPIELWERTE</small>
+                                </span>
+                                <div class="coordinate-values">
+                                    <span>
+                                        <b>X</b>
+                                        240
+                                        <small>mm</small>
+                                    </span>
+                                    <span>
+                                        <b>Y</b>
+                                        125
+                                        <small>mm</small>
+                                    </span>
+                                    <span>
+                                        <b>Z</b>
+                                        180
+                                        <small>mm</small>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="gripper-state">
+                                <span class="gripper-symbol">⋃</span>
+                                <span>
+                                    Greifer
+                                    <strong>Offen</strong>
+                                </span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Sprach-Demo; echte Aufnahme steht ganz unten. -->
+                    <aside class="command-panel" aria-labelledby="voice-heading">
+                        <div class="section-kicker">DEIN DRAHT ZUM ROBOTER</div>
+                        <h2 id="voice-heading">Sag, was passieren soll.</h2>
+                        <p>Aus deinen Worten werden klare Bewegungen.</p>
+
+                        <!-- Nur Demo-Animation, kein Mikrofon. Lauter blinken ist leider keine Spracherkennung. -->
+                        <input class="state-input" type="checkbox" id="mic-preview">
+
+                        <label class="mic-button" for="mic-preview" aria-label="Aufnahmeansicht umschalten">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                                <rect x="9" y="3" width="6" height="12" rx="3"/>
+                                <path d="M6 10v2a6 6 0 0 0 12 0v-2M12 18v4m-4 0h8"/>
+                            </svg>
+                        </label>
+
+                        <div class="mic-status">
+                            <span class="mic-idle">Zum Sprechen antippen</span>
+                            <span class="mic-active">Aufnahmeansicht aktiv</span>
+                            <small>UI-Demo · Mikrofon nicht verbunden</small>
+                        </div>
+
+                        <div class="waveform" aria-hidden="true">
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                        </div>
+
+                        <div class="transcript">
+                            <span class="eyebrow">SO KÖNNTE DEIN BEFEHL AUSSEHEN</span>
+                            <p>„Bewege den Greifer nach rechts und öffne ihn.“</p>
+                            <span class="example-tag">Beispieltranskript</span>
+                        </div>
+
+                        <div class="command-flow">
+                            <span>Sprache</span>
+                            <span class="flow-line"></span>
+                            <span>KI</span>
+                            <span class="flow-line"></span>
+                            <span>Roboter</span>
+                        </div>
+
+                        <!-- Beispielbefehl, wird nicht ausgeführt. Der Roboter hat deine Tippfehler noch nicht verdient. -->
+                        <div class="command-preview">
+                            <span class="eyebrow">ÜBERSETZTER BEFEHL · BEISPIEL</span>
+                            <code>
+                                <span>move_to</span>
+                                (x=240, y=125, z=180)
+                                <br>
+                                <span>gripper</span>
+                                (open)
+                            </code>
+                        </div>
+
+                        <button class="primary-button" disabled>
+                            Bewegung ausführen
+                            <span>DEMO</span>
+                        </button>
+                        <p class="panel-footnote">Die Roboterverbindung wird im Setup eingerichtet.</p>
+                    </aside>
+                </div>
+
+                <footer class="workspace-footer">
+                    <span>
+                        <span class="connection-dot"></span>
+                        Kein Roboter verbunden
+                    </span>
+                    <span>
+                        Ideen in Bewegung.
+                        <b>Lenze × HamelnHack</b>
+                    </span>
+                </footer>
+            </section>
+
+            <!-- Setup-Vorschau ohne Speicherung. Deine Einstellungen haben hier Goldfisch-Gedächtnis. -->
+            <section class="page setup-page" aria-labelledby="setup-heading">
+
+                <div class="page-heading">
+                    <div>
+                        <p class="eyebrow">BEREIT FÜR DIE ERSTE BEWEGUNG</p>
+                        <h1 id="setup-heading">Dein Roboter. Dein Setup.</h1>
+                        <p>Verbindung, Arbeitsraum und Sprache an einem Ort vorbereiten.</p>
+                    </div>
+                    <span class="demo-tag">Konfigurationsvorschau</span>
+                </div>
+
+                <div class="settings-grid">
+
+                    <section class="form-card">
+                        <span class="card-icon">⌁</span>
+                        <h2>Roboter verbinden</h2>
+                        <p>Gib die Verbindungsdaten deines Roboters ein.</p>
+                        <label for="robot-name">Robotername</label>
+                        <input id="robot-name" type="text" value="Lenze · Roboter 01">
+                        <label for="endpoint">Roboter-Endpunkt</label>
+
+                        <input id="endpoint" type="url" placeholder="ws://192.168.1.100:8080">
+                        <label for="protocol">Verbindungsart</label>
+
+                        <select id="protocol">
+                            <option>WebSocket</option>
+                            <option>HTTP / REST</option>
+                            <option>MQTT</option>
+                        </select>
+
+                        <button class="primary-button" disabled>Verbindung prüfen · Demo</button>
+                        <p class="field-note">Noch keine Verbindung zum Roboter verfügbar.</p>
+                    </section>
+
+                    <section class="form-card">
+                        <span class="card-icon">⌖</span>
+                        <h2>Arbeitsraum definieren</h2>
+                        <p>Grenzen und Koordinatensystem für die Steuerung.</p>
+
+                        <div class="input-row">
+                            <div>
+                                <label for="limit-x">X-Bereich (mm)</label>
+                                <input id="limit-x" type="number" min="0" value="500">
+                            </div>
+                            <div>
+                                <label for="limit-y">Y-Bereich (mm)</label>
+                                <input id="limit-y" type="number" min="0" value="500">
+                            </div>
+                        </div>
+                        <label for="limit-z">Z-Bereich (mm)</label>
+                        <input id="limit-z" type="number" min="0" value="400">
+                        <label for="reference">Koordinatensystem</label>
+                        <select id="reference">
+                            <option>Roboterbasis</option>
+                            <option>Werkzeug / Greifer</option>
+                        </select>
+                        <div class="info-box">Die Kalibrierung und Prüfung der Grenzen erfolgt später mit dem verbundenen Roboter.</div>
+                    </section>
+
+                    <section class="form-card">
+                        <span class="card-icon">◉</span>
+                        <h2>Sprache &amp; KI</h2>
+                        <p>Bereite die Verarbeitung deiner Sprachbefehle vor.</p>
+                        <label for="input-device">Audioquelle</label>
+                        <select id="input-device">
+                            <option>Standardmikrofon · Vorschau</option>
+                        </select>
+                        <label for="setup-language">Erkennungssprache</label>
+                        <select id="setup-language">
+                            <option>Deutsch (de-DE)</option>
+                            <option>English (en-US)</option>
+                        </select>
+
+                        <div class="setup-flow">
+                            <span>
+                                01
+                                <b>Transkribieren</b>
+                            </span>
+                            <span>
+                                02
+                                <b>Befehl interpretieren</b>
+                            </span>
+                            <span>
+                                03
+                                <b>Bewegung bestätigen</b>
+                            </span>
+                        </div>
+                        <p class="field-note">Die Spracherkennung kannst du ganz unten testen. Die KI-Anbindung folgt später.</p>
+                    </section>
+                </div>
+                <p class="save-notice">Prototyp: Eingaben können ausprobiert werden und werden noch nicht gespeichert.</p>
+            </section>
+
+            <!-- Einstellungs-Vorschau ohne Roboterwirkung. Du drehst hier technisch gesehen am Nichts. -->
+            <section class="page settings-page" aria-labelledby="settings-heading">
+
+                <div class="page-heading">
+                    <div>
+                        <p class="eyebrow">SO ARBEITEST DU AM LIEBSTEN</p>
+                        <h1 id="settings-heading">Alles nach deinem Gefühl.</h1>
+                        <p>Passe die Darstellung und die geplante Steuerung an.</p>
+                    </div>
+                    <span class="demo-tag">Einstellungsvorschau</span>
+                </div>
+
+                <div class="settings-grid settings-two">
+
+                    <section class="form-card">
+                        <h2>Darstellung</h2>
+                        <p>Mehr Orientierung im virtuellen Arbeitsraum.</p>
+
+                        <label class="toggle-row">
+                            <span>
+                                Ist-Position anzeigen
+                                <small>Echten Arm transparent darstellen</small>
+                            </span>
+                            <input type="checkbox" checked>
+                            <span class="switch"></span>
+                        </label>
+
+                        <label class="toggle-row">
+                            <span>
+                                Koordinatengitter
+                                <small>Raster als räumliche Orientierung</small>
+                            </span>
+                            <input type="checkbox" checked>
+                            <span class="switch"></span>
+                        </label>
+                        <label for="opacity">Deckkraft des echten Arms</label>
+                        <div class="range-labels">
+                            <span>Transparent</span>
+                            <span>Deutlich</span>
+                        </div>
+
+                        <input id="opacity" type="range" min="10" max="80" value="25">
+                        <label for="units">Einheiten</label>
+                        <select id="units">
+                            <option>Millimeter (mm)</option>
+                            <option>Zentimeter (cm)</option>
+                        </select>
+                    </section>
+
+                    <section class="form-card">
+                        <h2>Steuerung &amp; Bestätigung</h2>
+                        <p>Voreinstellungen für die spätere Roboteranbindung.</p>
+                        <label for="speed">Bewegungsgeschwindigkeit</label>
+                        <select id="speed">
+                            <option>Langsam · Präzise</option>
+                            <option>Mittel</option>
+                            <option>Schnell</option>
+                        </select>
+
+                        <label class="toggle-row">
+                            <span>
+                                Bewegung bestätigen
+                                <small>Sprachbefehle vor Ausführung prüfen</small>
+                            </span>
+                            <input type="checkbox" checked>
+                            <span class="switch"></span>
+                        </label>
+
+                        <label class="toggle-row">
+                            <span>
+                                Akustisches Feedback
+                                <small>Bestätigung bei erkanntem Befehl</small>
+                            </span>
+                            <input type="checkbox">
+                            <span class="switch"></span>
+                        </label>
+                        <div class="info-box">Diese Einstellungen zeigen die geplanten Optionen. Sie beeinflussen in diesem Prototyp noch keinen Roboter.</div>
+                    </section>
+                </div>
+                <p class="save-notice">Prototyp: Die Optionen sind bedienbar. Darstellung und Speicherung werden später angebunden.</p>
+            </section>
+
+            <!-- 🚨 NICHT AI SLOP: Sprachskript angebunden. Ab hier dürfen echte Fehler auftreten. -->
+            <section class="speech-test" aria-labelledby="speech-test-heading">
+                <header class="speech-test-heading">
+
+                    <p class="speech-test-emojis" aria-hidden="true">🚨 🔥 🎙️ 🤖 🔥 🚨</p>
+                    <h2 id="speech-test-heading">NICHT AI SLOP</h2>
+                    <p>Hier wird wirklich transkribiert.</p>
+                </header>
+                <div class="speech-test-content">
+                    <h3>Spracherkennung testen</h3>
+                    <p>Drücke auf Start, erlaube den Mikrofonzugriff und sprich. Dein erkannter Text erscheint unten.</p>
+
+                    <!-- Diese IDs braucht JavaScript. Umbenennen ohne Nachdenken ist dein nächster Gratis-Bug. -->
+                    <div class="recording-buttons">
+                        <button id="startButton" type="button">🎙️ Start</button>
+                        <button id="stopButton" type="button" disabled>⏹️ Stop</button>
+                    </div>
+
+                    <!-- Statusausgabe für das Sprachskript. -->
+                    <p id="recordingStatus" class="recording-status" role="status">Bereit für deine Aufnahme.</p>
+
+                    <label for="log">Dein transkribierter Text</label>
+
+                    <!-- Ausgabe des erkannten Texts; readonly erlaubt Kopieren. -->
+                    <textarea id="log" rows="8" readonly placeholder="Deine Worte erscheinen hier …"></textarea>
+                    <p class="speech-test-note">Die Spracherkennung läuft über deinen Browser und kann Audio an dessen Spracherkennungsdienst senden. Verwende HTTPS oder localhost für den Mikrofonzugriff. Hier werden noch keine KI- oder Roboterbefehle ausgeführt.</p>
+
+                    <noscript>Bitte aktiviere JavaScript, um die Spracherkennung zu verwenden.</noscript>
+                </div>
+            </section>
+        </main>
+
+        <label class="focus-exit" for="focus-mode">⛶ Ansicht schließen</label>
+    </body>
+</html>
